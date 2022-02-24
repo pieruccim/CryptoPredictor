@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 import pandas_datareader as web
 import numpy as np
@@ -9,7 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -21,6 +22,7 @@ LONG_WINDOW = 5
 
 def scraper(crypto_name):
     return web.get_data_yahoo(crypto_name, start="2021-01-01", end="2022-01-01")
+
 
 def plot_graph(dataset):
     plt.title('BTC-USD Adj Close Price', fontsize=16)
@@ -46,21 +48,55 @@ def plot_graph(dataset):
 
 
 def create_preprocessor(predictors):
-
     numeric_transformer = Pipeline(steps=[
-        ('scaler', StandardScaler()), #Standardize features by removing the mean and scaling to unit variance
+        ('scaler', StandardScaler()),  # Standardize features by removing the mean and scaling to unit variance
         ("pca", PCA())
     ])
 
     numeric_features = predictors
 
     return ColumnTransformer(
-       transformers=[
-        ('numeric', numeric_transformer, numeric_features)
-    ])
+        transformers=[
+            ('numeric', numeric_transformer, numeric_features)
+        ])
 
 
-# Press the green button in the gutter to run the script.
+def cross_validation(dataset, predictors):
+    # CROSS VALIDATION
+
+    # n_splits is the number of subsets created
+    # test_size is the number of records for each test sets
+    tscv = TimeSeriesSplit(gap=0, n_splits=9, test_size=30)
+
+    for train_index, test_index in tscv.split(dataset):
+        #print("TRAIN:", train_index, "TEST:", test_index)
+
+        train_dataset, test_dataset = dataset.iloc[train_index], dataset.iloc[test_index]
+        x_train, x_test = train_dataset[predictors], test_dataset[predictors]
+        y_train, y_test = train_dataset[['trend']], test_dataset[['trend']]
+
+        pipe = Pipeline(steps=[
+            ('preprocessor', preprocessor)
+            , ('classifier', AdaBoostClassifier())
+        ])
+
+        # Train the model
+        pipe.fit(x_train, y_train.values.ravel())
+
+        # Use model to make predictions
+        y_pred = pipe.predict(x_test)
+
+        # Evaluate the performance
+        print("\nTraining ", AdaBoostClassifier())
+        accuracy = accuracy_score(y_pred, y_test)
+        print("Accuracy on test set: ", accuracy)
+        print("Metrics per class on test set:")
+
+        print("Confusion matrix:")
+        metrics.confusion_matrix(y_test, y_pred)
+        print(metrics.classification_report(y_test, y_pred))
+
+
 if __name__ == '__main__':
     crypto = "BTC-USD"
     scraped_df = scraper(crypto)
@@ -79,12 +115,13 @@ if __name__ == '__main__':
     dataset['diff_ema'] = 0.0
     dataset['trend'] = 0.0
 
-    dataset['trend'][SHORT_WINDOW:] = np.where(dataset['ema_short'][SHORT_WINDOW:] > dataset['ema_long'][SHORT_WINDOW:], 1, 0)
+    dataset['trend'][SHORT_WINDOW:] = np.where(dataset['ema_short'][SHORT_WINDOW:] > dataset['ema_long'][SHORT_WINDOW:],
+                                               1, 0)
     dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['diff_ema'] = dataset['ema_short'] - dataset['ema_long']
     dataset['volume'] = scraped_df['Volume']
-    #dataset['trend'] = dataset['trend'].replace(1, 'up')
-    #dataset['trend'] = dataset['trend'].replace(0, 'down')
+    # dataset['trend'] = dataset['trend'].replace(1, 'up')
+    # dataset['trend'] = dataset['trend'].replace(0, 'down')
 
     dataset['trend'] = dataset['trend'].shift(-1)
     dataset = dataset.fillna(0)
@@ -92,8 +129,8 @@ if __name__ == '__main__':
     os.makedirs('data', exist_ok=True)
     dataset.to_csv('data/BTC_crypto_data.csv')
 
-    #print(dataset)
-    #plot_graph(dataset)
+    # print(dataset)
+    # plot_graph(dataset)
 
     predictors = ['open',
                   'high',
@@ -110,15 +147,11 @@ if __name__ == '__main__':
     y_train = pd.DataFrame()
     y_test = pd.DataFrame()
 
-
     x_train, x_test, y_train, y_test = train_test_split(dataset[predictors],
-                                              dataset[['trend']], test_size=.333,
-                                              shuffle=False, random_state=0)
+                                                        dataset[['trend']], test_size=.333,
+                                                        shuffle=False, random_state=0)
 
-    #print('Size of train set: ', x_train.shape)
-    #print('Size of test set: ', x_test.shape)
-    #print('Size of train set: ', y_train.shape)
-    #print('Size of test set: ', y_test.shape)
+    print(type(y_test))
 
     # CLASSIFIER TRAINING
     classifiers = [
@@ -154,6 +187,13 @@ if __name__ == '__main__':
 
         print(metrics.classification_report(y_test, y_pred))
 
+    # the classifier that performs better in terms of Accuracy and F1-score is the AdaBoostClassifier()
+    # save the model
+    filename = 'model/crypto_predictor.pkl'
+    final_pipe = Pipeline(steps=[
+        ('preprocessor', preprocessor)
+        , ('classifier', classifiers[1])
+    ])
+    joblib.dump(final_pipe, filename)
 
-
-
+    cross_validation(dataset, predictors)
