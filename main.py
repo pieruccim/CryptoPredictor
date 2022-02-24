@@ -3,16 +3,24 @@ import pandas_datareader as web
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from sklearn.model_selection import train_test_split
 
-# Press Maiusc+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from sklearn import metrics
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 
 SHORT_WINDOW = 2
 LONG_WINDOW = 5
 
 def scraper(crypto_name):
-    return web.get_data_yahoo(crypto_name, start="2021-01-01", end="2021-12-30")
+    return web.get_data_yahoo(crypto_name, start="2021-01-01", end="2022-01-01")
 
 def plot_graph(dataset):
     plt.title('BTC-USD Adj Close Price', fontsize=16)
@@ -35,6 +43,21 @@ def plot_graph(dataset):
              'v', markersize=10, color='k', label='sell')
 
     plt.show()
+
+
+def create_preprocessor(predictors):
+
+    numeric_transformer = Pipeline(steps=[
+        ('scaler', StandardScaler()), #Standardize features by removing the mean and scaling to unit variance
+        ("pca", PCA())
+    ])
+
+    numeric_features = predictors
+
+    return ColumnTransformer(
+       transformers=[
+        ('numeric', numeric_transformer, numeric_features)
+    ])
 
 
 # Press the green button in the gutter to run the script.
@@ -60,17 +83,16 @@ if __name__ == '__main__':
     dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['diff_ema'] = dataset['ema_short'] - dataset['ema_long']
     dataset['volume'] = scraped_df['Volume']
-
-    dataset = dataset.fillna(0)
-    dataset['trend'] = dataset['trend'].replace(1, 'up')
-    dataset['trend'] = dataset['trend'].replace(0, 'down')
+    #dataset['trend'] = dataset['trend'].replace(1, 'up')
+    #dataset['trend'] = dataset['trend'].replace(0, 'down')
 
     dataset['trend'] = dataset['trend'].shift(-1)
+    dataset = dataset.fillna(0)
 
     os.makedirs('data', exist_ok=True)
     dataset.to_csv('data/BTC_crypto_data.csv')
 
-    print(dataset)
+    #print(dataset)
     #plot_graph(dataset)
 
     predictors = ['open',
@@ -82,6 +104,7 @@ if __name__ == '__main__':
                   'volume'
                   ]
 
+    # SPLIT TRAIN & TEST
     x_train = pd.DataFrame()
     x_test = pd.DataFrame()
     y_train = pd.DataFrame()
@@ -92,11 +115,44 @@ if __name__ == '__main__':
                                               dataset[['trend']], test_size=.333,
                                               shuffle=False, random_state=0)
 
-    print('Size of train set: ', x_train)
-    print('Size of test set: ', x_test)
-    print('Size of train set: ', y_train)
-    print('Size of test set: ', y_test)
+    #print('Size of train set: ', x_train.shape)
+    #print('Size of test set: ', x_test.shape)
+    #print('Size of train set: ', y_train.shape)
+    #print('Size of test set: ', y_test.shape)
 
+    # CLASSIFIER TRAINING
+    classifiers = [
+        RandomForestClassifier(),
+        AdaBoostClassifier(),
+        KNeighborsClassifier(),
+        LogisticRegression(),
+        GaussianNB()
+    ]
+
+    preprocessor = create_preprocessor(predictors)
+
+    for classifier in classifiers:
+        pipe = Pipeline(steps=[
+            ('preprocessor', preprocessor)
+            , ('classifier', classifier)
+        ])
+
+        # Train the model
+        pipe.fit(x_train, y_train.values.ravel())
+
+        # Use model to make predictions
+        y_pred = pipe.predict(x_test)
+
+        # Evaluate the performance
+        print("\nTraining ", classifier)
+        accuracy = accuracy_score(y_pred, y_test)
+        print("Accuracy on test set: ", accuracy)
+        print("Metrics per class on test set:")
+
+        print("Confusion matrix:")
+        metrics.confusion_matrix(y_test, y_pred)
+
+        print(metrics.classification_report(y_test, y_pred))
 
 
 
