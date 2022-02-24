@@ -68,34 +68,50 @@ def cross_validation(dataset, predictors):
     # test_size is the number of records for each test sets
     tscv = TimeSeriesSplit(gap=0, n_splits=9, test_size=30)
 
+    accuracy_scores = []
     for train_index, test_index in tscv.split(dataset):
-        #print("TRAIN:", train_index, "TEST:", test_index)
+        print("--------------------------------------------------------------------------")
+        print("TRAIN:", train_index, "\n TEST:", test_index)
 
         train_dataset, test_dataset = dataset.iloc[train_index], dataset.iloc[test_index]
         x_train, x_test = train_dataset[predictors], test_dataset[predictors]
         y_train, y_test = train_dataset[['trend']], test_dataset[['trend']]
 
-        pipe = Pipeline(steps=[
-            ('preprocessor', preprocessor)
-            , ('classifier', AdaBoostClassifier())
-        ])
+        # CLASSIFIER TRAINING
+        classifiers = [
+            RandomForestClassifier(),
+            AdaBoostClassifier(),
+            KNeighborsClassifier(),
+            LogisticRegression(),
+            GaussianNB()
+        ]
 
-        # Train the model
-        pipe.fit(x_train, y_train.values.ravel())
+        preprocessor = create_preprocessor(predictors)
 
-        # Use model to make predictions
-        y_pred = pipe.predict(x_test)
+        for classifier in classifiers:
 
-        # Evaluate the performance
-        print("\nTraining ", AdaBoostClassifier())
-        accuracy = accuracy_score(y_pred, y_test)
-        print("Accuracy on test set: ", accuracy)
-        print("Metrics per class on test set:")
+            pipe = Pipeline(steps=[
+                ('preprocessor', preprocessor)
+                , ('classifier', classifier)
+            ])
 
-        print("Confusion matrix:")
-        metrics.confusion_matrix(y_test, y_pred)
-        print(metrics.classification_report(y_test, y_pred))
+            # Train the model
+            pipe.fit(x_train, y_train.values.ravel())
 
+            # Use model to make predictions
+            y_pred = pipe.predict(x_test)
+
+            # Evaluate the performance
+            print("\nTraining ", classifier)
+            accuracy = accuracy_score(y_pred, y_test)
+            accuracy_scores.append(accuracy)
+            print("Accuracy on test set: ", accuracy)
+            print("Metrics per class on test set:")
+            print("Confusion matrix:")
+            metrics.confusion_matrix(y_test, y_pred)
+            print(metrics.classification_report(y_test, y_pred))
+
+    print("ACCURACY OVERALL MEAN: " + str(np.mean(accuracy_scores)))
 
 if __name__ == '__main__':
     crypto = "BTC-USD"
@@ -142,6 +158,7 @@ if __name__ == '__main__':
                   ]
 
     # SPLIT TRAIN & TEST
+    '''
     x_train = pd.DataFrame()
     x_test = pd.DataFrame()
     y_train = pd.DataFrame()
@@ -151,7 +168,7 @@ if __name__ == '__main__':
                                                         dataset[['trend']], test_size=.333,
                                                         shuffle=False, random_state=0)
 
-    print(type(y_test))
+    #print(type(y_test))
 
     # CLASSIFIER TRAINING
     classifiers = [
@@ -186,6 +203,7 @@ if __name__ == '__main__':
         metrics.confusion_matrix(y_test, y_pred)
 
         print(metrics.classification_report(y_test, y_pred))
+        
 
     # the classifier that performs better in terms of Accuracy and F1-score is the AdaBoostClassifier()
     # save the model
@@ -195,5 +213,6 @@ if __name__ == '__main__':
         , ('classifier', classifiers[1])
     ])
     joblib.dump(final_pipe, filename)
+    '''
 
     cross_validation(dataset, predictors)
