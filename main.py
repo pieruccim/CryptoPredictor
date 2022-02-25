@@ -23,7 +23,7 @@ LONG_WINDOW = 5
 
 
 def scraper(crypto_name):
-    return web.get_data_yahoo(crypto_name, start="2021-01-01", end="2022-01-01")
+    return web.get_data_yahoo(crypto_name, start="2021-02-24", end="2022-02-23")
 
 
 def plot_graph(dataset):
@@ -161,20 +161,7 @@ if __name__ == '__main__':
                   'volume'
                   ]
 
-    # SPLIT TRAIN & TEST
-
-    x_train = pd.DataFrame()
-    x_test = pd.DataFrame()
-    y_train = pd.DataFrame()
-    y_test = pd.DataFrame()
-
-    x_train, x_test, y_train, y_test = train_test_split(dataset[predictors],
-                                                        dataset[['trend']], test_size=.333,
-                                                        shuffle=False, random_state=0)
-
-    # print(type(y_test))
-
-    # CLASSIFIER TRAINING
+    # CLASSIFIERS TRAINING
     classifiers = [
         RandomForestClassifier(),
         AdaBoostClassifier(),
@@ -190,17 +177,68 @@ if __name__ == '__main__':
         overall_accuracy_avg_means[str(classifier)] = avg_accuracy
         overall_f1[str(classifier)] = str(f1_avg_0) + "\t" + str(f1_avg_1)
 
-    print("CLASSIFIER NAME \t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 0")
+    print("\n")
+    print("CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 0")
     for classifier in classifiers:
-        print(str(classifier) + "\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(overall_f1[str(classifier)]))
+        print(str(classifier) + "\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(overall_f1[str(classifier)]))
 
-    # the classifier that performs better in terms of Accuracy and F1-score is the AdaBoostClassifier()
-    # save the model
-    '''
+    print("\nThe classifier that performs better in terms of Accuracy and F1-score is the GaussianNB()")
+
+    # TRAINING WITH THE FINAL MODEL
+
+    x_train = pd.DataFrame()
+    x_test = pd.DataFrame()
+    y_train = pd.DataFrame()
+    y_test = pd.DataFrame()
+
+    x_train, x_test, y_train, y_test = train_test_split(dataset[predictors],
+                                                        dataset[['trend']], test_size=.30,
+                                                        shuffle=False, random_state=0)
+
+    preprocessor = create_preprocessor(predictors)
+
+    pipe = Pipeline(steps=[
+        ('preprocessor', preprocessor)
+        , ('classifier', classifiers[4])
+    ])
+
+    # Train the model
+    pipe.fit(x_train, y_train.values.ravel())
+
+    # Use model to make predictions
+    y_pred = pipe.predict(x_test)
+
+    # Evaluate the performance
+    print("\nTraining ", classifier)
+    accuracy = accuracy_score(y_test, y_pred)
+
+    print("Accuracy on test set: ", accuracy)
+    print("Metrics per class on test set:")
+    print("Confusion matrix:")
+
+    metrics.confusion_matrix(y_test, y_pred)
+    print(metrics.classification_report(y_test, y_pred))
+
+    # WE TRAIN THE FINAL MODEL ON THE WHOLE DATASET
+
+    x_final_train = dataset[predictors]
+    y_final_train = dataset[['trend']]
+
+    # SAVE THE MODEL
+
     filename = 'model/crypto_predictor.pkl'
     final_pipe = Pipeline(steps=[
         ('preprocessor', preprocessor)
-        , ('classifier', classifiers[1])
+        , ('classifier', classifiers[4].fit(x_final_train, y_final_train))
     ])
     joblib.dump(final_pipe, filename)
-    '''
+
+    # LOAD AGAIN THE MODEL
+    clf = joblib.load(filename)
+
+    tuple_to_predict = dataset.iloc[dataset.size-1:dataset.size][predictors]
+
+    print(tuple_to_predict)
+
+    result = clf.predict(tuple_to_predict)
+    print("Prediction for 2022-02-25: " + str(result))
