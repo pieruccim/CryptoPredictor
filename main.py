@@ -5,11 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+from collections import Counter
 from sklearn import metrics
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -19,6 +20,7 @@ from sklearn.neighbors import KNeighborsClassifier
 
 SHORT_WINDOW = 2
 LONG_WINDOW = 5
+
 
 def scraper(crypto_name):
     return web.get_data_yahoo(crypto_name, start="2021-01-01", end="2022-01-01")
@@ -61,7 +63,7 @@ def create_preprocessor(predictors):
         ])
 
 
-def cross_validation(dataset, predictors):
+def cross_validation(dataset, predictors, classifier):
     # CROSS VALIDATION
 
     # n_splits is the number of subsets created
@@ -69,49 +71,51 @@ def cross_validation(dataset, predictors):
     tscv = TimeSeriesSplit(gap=0, n_splits=9, test_size=30)
 
     accuracy_scores = []
+    f1_scores_0 = []
+    f1_scores_1 = []
     for train_index, test_index in tscv.split(dataset):
         print("--------------------------------------------------------------------------")
-        print("TRAIN:", train_index, "\n TEST:", test_index)
+        #print("TRAIN:", train_index, "\n TEST:", test_index)
 
         train_dataset, test_dataset = dataset.iloc[train_index], dataset.iloc[test_index]
         x_train, x_test = train_dataset[predictors], test_dataset[predictors]
         y_train, y_test = train_dataset[['trend']], test_dataset[['trend']]
 
-        # CLASSIFIER TRAINING
-        classifiers = [
-            RandomForestClassifier(),
-            AdaBoostClassifier(),
-            KNeighborsClassifier(),
-            LogisticRegression(),
-            GaussianNB()
-        ]
+        print("Class label for training set : ", Counter(y_train['trend']))
+        print("Class label for test set : ", Counter(y_test['trend']))
 
         preprocessor = create_preprocessor(predictors)
 
-        for classifier in classifiers:
+        pipe = Pipeline(steps=[
+            ('preprocessor', preprocessor)
+            , ('classifier', classifier)
+        ])
 
-            pipe = Pipeline(steps=[
-                ('preprocessor', preprocessor)
-                , ('classifier', classifier)
-            ])
+        # Train the model
+        pipe.fit(x_train, y_train.values.ravel())
 
-            # Train the model
-            pipe.fit(x_train, y_train.values.ravel())
+        # Use model to make predictions
+        y_pred = pipe.predict(x_test)
 
-            # Use model to make predictions
-            y_pred = pipe.predict(x_test)
+        # Evaluate the performance
+        print("\nTraining ", classifier)
+        accuracy = accuracy_score(y_test, y_pred)
+        accuracy_scores.append(accuracy)
+        print("Accuracy on test set: ", accuracy)
+        print("Metrics per class on test set:")
+        print("Confusion matrix:")
+        metrics.confusion_matrix(y_test, y_pred)
+        print(metrics.classification_report(y_test, y_pred))
 
-            # Evaluate the performance
-            print("\nTraining ", classifier)
-            accuracy = accuracy_score(y_pred, y_test)
-            accuracy_scores.append(accuracy)
-            print("Accuracy on test set: ", accuracy)
-            print("Metrics per class on test set:")
-            print("Confusion matrix:")
-            metrics.confusion_matrix(y_test, y_pred)
-            print(metrics.classification_report(y_test, y_pred))
+        f1 = f1_score(y_test, y_pred, average=None)
+        f1_scores_0.append(f1[0])
+        f1_scores_1.append(f1[1])
 
-    print("ACCURACY OVERALL MEAN: " + str(np.mean(accuracy_scores)))
+    print("ACCURACY OVERALL MEAN: " + str(np.mean(accuracy_scores)) + " FOR CLASSIFIER: " + str(classifier))
+    print("F1 OVERALL MEAN FOR LABEL 0: " + str(np.mean(f1_scores_0)) + " / FOR LABEL 1: " + str(
+        np.mean(f1_scores_1)) + " FOR CLASSIFIER: " + str(classifier))
+    return np.mean(accuracy_scores), np.mean(f1_scores_0), np.mean(f1_scores_1)
+
 
 if __name__ == '__main__':
     crypto = "BTC-USD"
@@ -158,7 +162,7 @@ if __name__ == '__main__':
                   ]
 
     # SPLIT TRAIN & TEST
-    '''
+
     x_train = pd.DataFrame()
     x_test = pd.DataFrame()
     y_train = pd.DataFrame()
@@ -168,7 +172,7 @@ if __name__ == '__main__':
                                                         dataset[['trend']], test_size=.333,
                                                         shuffle=False, random_state=0)
 
-    #print(type(y_test))
+    # print(type(y_test))
 
     # CLASSIFIER TRAINING
     classifiers = [
@@ -179,34 +183,20 @@ if __name__ == '__main__':
         GaussianNB()
     ]
 
-    preprocessor = create_preprocessor(predictors)
-
+    overall_accuracy_avg_means = {}
+    overall_f1 = {}
     for classifier in classifiers:
-        pipe = Pipeline(steps=[
-            ('preprocessor', preprocessor)
-            , ('classifier', classifier)
-        ])
+        avg_accuracy, f1_avg_0, f1_avg_1 = cross_validation(dataset, predictors, classifier)
+        overall_accuracy_avg_means[str(classifier)] = avg_accuracy
+        overall_f1[str(classifier)] = str(f1_avg_0) + "\t" + str(f1_avg_1)
 
-        # Train the model
-        pipe.fit(x_train, y_train.values.ravel())
-
-        # Use model to make predictions
-        y_pred = pipe.predict(x_test)
-
-        # Evaluate the performance
-        print("\nTraining ", classifier)
-        accuracy = accuracy_score(y_pred, y_test)
-        print("Accuracy on test set: ", accuracy)
-        print("Metrics per class on test set:")
-
-        print("Confusion matrix:")
-        metrics.confusion_matrix(y_test, y_pred)
-
-        print(metrics.classification_report(y_test, y_pred))
-        
+    print("CLASSIFIER NAME \t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 0")
+    for classifier in classifiers:
+        print(str(classifier) + "\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(overall_f1[str(classifier)]))
 
     # the classifier that performs better in terms of Accuracy and F1-score is the AdaBoostClassifier()
     # save the model
+    '''
     filename = 'model/crypto_predictor.pkl'
     final_pipe = Pipeline(steps=[
         ('preprocessor', preprocessor)
@@ -214,5 +204,3 @@ if __name__ == '__main__':
     ])
     joblib.dump(final_pipe, filename)
     '''
-
-    cross_validation(dataset, predictors)
