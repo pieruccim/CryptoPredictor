@@ -23,7 +23,7 @@ LONG_WINDOW = 5
 
 
 def scraper(crypto_name):
-    return web.get_data_yahoo(crypto_name, start="2021-02-24", end="2022-02-23")
+    return web.get_data_yahoo(crypto_name, start="2020-02-24", end="2022-02-23")
 
 
 def plot_graph(dataset):
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     dataset.to_csv('data/BTC_crypto_data.csv')
 
     # print(dataset)
-    # plot_graph(dataset)
+    #plot_graph(dataset)
 
     predictors = ['open',
                   'high',
@@ -229,16 +229,8 @@ if __name__ == '__main__':
     filename = 'model/crypto_predictor.pkl'
     final_pipe = Pipeline(steps=[
         ('preprocessor', preprocessor)
-        , ('classifier', classifiers[4].fit(x_final_train, y_final_train))
-    ])
+        , ('classifier', classifiers[0])
+    ]).fit(x_final_train, y_final_train.values.ravel())
     joblib.dump(final_pipe, filename)
 
-    # LOAD AGAIN THE MODEL
-    clf = joblib.load(filename)
 
-    tuple_to_predict = dataset.iloc[dataset.size-1:dataset.size][predictors]
-
-    print(tuple_to_predict)
-
-    result = clf.predict(tuple_to_predict)
-    print("Prediction for 2022-02-25: " + str(result))
