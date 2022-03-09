@@ -23,7 +23,7 @@ predictors = ['open',
 #tuple_to_predict = dataset.iloc[len(dataset.index)-1][predictors].to_frame()
 
 #dataset.drop(columns=['Date', 'diff_ema', 'trend', 'positions'], inplace=True)
-record_to_predict = dataset.loc[dataset['Date'] == '2021-10-12'][predictors]
+record_to_predict = dataset.loc[dataset['Date'] == '2021-09-30'][predictors]
 
 #preprocessor = create_preprocessor(predictors)
 

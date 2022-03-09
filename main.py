@@ -19,7 +19,11 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
 SHORT_WINDOW = 2
-LONG_WINDOW = 5
+LONG_WINDOW = 4
+FLAT_THRESHOLD = 0.01
+
+N_SPLITS = 9 #28
+TEST_SIZE = 30 #60
 
 
 def scraper(crypto_name):
@@ -38,13 +42,25 @@ def plot_graph(dataset):
     plt.tick_params(labelsize=12)
     plt.legend(loc='upper left', fontsize=12)
 
-    plt.plot(dataset.loc[dataset.positions == 1.0].index,
+    plt.plot(dataset.loc[dataset.trend == 1.0].index,
+             dataset.adj_close[dataset.trend == 1.0],
+             '^', markersize=8, color='g', label='up')
+
+    plt.plot(dataset.loc[dataset.trend == 0.0].index,
+             dataset.adj_close[dataset.trend == 0.0],
+             '^', markersize=8, color='y', label='flat')
+
+    plt.plot(dataset.loc[dataset.trend == -1.0].index,
+             dataset.adj_close[dataset.trend == -1.0],
+             '^', markersize=8, color='r', label='down')
+
+    '''plt.plot(dataset.loc[dataset.positions == 1.0].index,
              dataset.ema_short[dataset.positions == 1.0],
              '^', markersize=10, color='r', label='buy')
 
     plt.plot(dataset.loc[dataset.positions == -1.0].index,
              dataset.ema_long[dataset.positions == -1.0],
-             'v', markersize=10, color='k', label='sell')
+             'v', markersize=10, color='k', label='sell')'''
 
     plt.show()
 
@@ -68,11 +84,12 @@ def cross_validation(dataset, predictors, classifier):
 
     # n_splits is the number of subsets created
     # test_size is the number of records for each test sets
-    tscv = TimeSeriesSplit(gap=0, n_splits=9, test_size=30)
+    tscv = TimeSeriesSplit(gap=0, n_splits= N_SPLITS, test_size=TEST_SIZE)
 
     accuracy_scores = []
-    f1_scores_0 = []
-    f1_scores_1 = []
+    f1_scores_down = []
+    f1_scores_flat = []
+    f1_scores_up = []
     for train_index, test_index in tscv.split(dataset):
         print("--------------------------------------------------------------------------")
         #print("TRAIN:", train_index, "\n TEST:", test_index)
@@ -108,13 +125,25 @@ def cross_validation(dataset, predictors, classifier):
         print(metrics.classification_report(y_test, y_pred))
 
         f1 = f1_score(y_test, y_pred, average=None)
-        f1_scores_0.append(f1[0])
-        f1_scores_1.append(f1[1])
+
+        try:
+            f1_scores_down.append(f1[0])
+        except Exception as e:
+            print("Exception: " + str(e))
+        try:
+            f1_scores_flat.append(f1[1])
+        except Exception as e:
+            print("Exception: " + str(e))
+        try:
+            f1_scores_up.append(f1[2])
+        except Exception as e:
+            print("Exception: " + str(e))
 
     print("ACCURACY OVERALL MEAN: " + str(np.mean(accuracy_scores)) + " FOR CLASSIFIER: " + str(classifier))
-    print("F1 OVERALL MEAN FOR LABEL 0: " + str(np.mean(f1_scores_0)) + " / FOR LABEL 1: " + str(
-        np.mean(f1_scores_1)) + " FOR CLASSIFIER: " + str(classifier))
-    return np.mean(accuracy_scores), np.mean(f1_scores_0), np.mean(f1_scores_1)
+    print("F1 OVERALL MEAN FOR LABEL -1: " + str(np.mean(f1_scores_down)) + " / FOR LABEL 0: " + str(
+        np.mean(f1_scores_flat)) + " / FOR LABEL 1: " + str(
+        np.mean(f1_scores_up)) + " FOR CLASSIFIER: " + str(classifier))
+    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up)
 
 
 if __name__ == '__main__':
@@ -135,22 +164,40 @@ if __name__ == '__main__':
     dataset['diff_ema'] = 0.0
     dataset['trend'] = 0.0
 
-    dataset['trend'][SHORT_WINDOW:] = np.where(dataset['ema_short'][SHORT_WINDOW:] > dataset['ema_long'][SHORT_WINDOW:],
-                                               1, 0)
-    dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['diff_ema'] = dataset['ema_short'] - dataset['ema_long']
+
+    # we set the labels for each day: -1 DOWN, 0 FLAT and 1 UP
+
+    '''dataset['trend'][SHORT_WINDOW:] = np.where( dataset['diff_ema'][SHORT_WINDOW:] > 0,
+                                               1 if ((abs(dataset['diff_ema'][SHORT_WINDOW:]) > dataset['adj_close'][SHORT_WINDOW:] * FLAT_THRESHOLD).bool() == True) else 0,
+                                               -1 if (abs(dataset['diff_ema'][SHORT_WINDOW:]) > dataset['adj_close'][SHORT_WINDOW:] * FLAT_THRESHOLD).bool() else 0)'''
+
+    for index, row in dataset.iterrows():
+        if row.diff_ema > 0:
+            if abs(row.diff_ema) > (row.adj_close * FLAT_THRESHOLD):
+                dataset.loc[index, 'trend'] = 1
+            else:
+                dataset.loc[index, 'trend'] = 0
+        elif row.diff_ema <= 0:
+            if abs(row.diff_ema) > (row.adj_close * FLAT_THRESHOLD):
+                dataset.loc[index, 'trend'] = -1
+            else:
+                dataset.loc[index, 'trend'] = 0
+
+
+    #dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['volume'] = scraped_df['Volume']
     # dataset['trend'] = dataset['trend'].replace(1, 'up')
     # dataset['trend'] = dataset['trend'].replace(0, 'down')
-
-    dataset['trend'] = dataset['trend'].shift(-1)
-    dataset = dataset.fillna(0)
 
     os.makedirs('data', exist_ok=True)
     dataset.to_csv('data/BTC_crypto_data.csv')
 
     # print(dataset)
-    #plot_graph(dataset)
+    dataset['trend'] = dataset['trend'].shift(-1)
+    dataset = dataset.fillna(0)
+
+    plot_graph(dataset)
 
     predictors = ['open',
                   'high',
@@ -173,16 +220,16 @@ if __name__ == '__main__':
     overall_accuracy_avg_means = {}
     overall_f1 = {}
     for classifier in classifiers:
-        avg_accuracy, f1_avg_0, f1_avg_1 = cross_validation(dataset, predictors, classifier)
+        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up = cross_validation(dataset, predictors, classifier)
         overall_accuracy_avg_means[str(classifier)] = avg_accuracy
-        overall_f1[str(classifier)] = str(f1_avg_0) + "\t" + str(f1_avg_1)
+        overall_f1[str(classifier)] = str(f1_avg_down) + "\t" + str(f1_avg_flat) + "\t" + str(f1_avg_up)
 
     print("\n")
-    print("CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 0")
+    print("CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
     for classifier in classifiers:
         print(str(classifier) + "\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(overall_f1[str(classifier)]))
 
-    print("\nThe classifier that performs better in terms of Accuracy and F1-score is the GaussianNB()")
+    print("\nThe classifier that performs better in terms of Accuracy and F1-score is the " + str(classifiers[0]))
 
     # TRAINING WITH THE FINAL MODEL
 
@@ -199,7 +246,7 @@ if __name__ == '__main__':
 
     pipe = Pipeline(steps=[
         ('preprocessor', preprocessor)
-        , ('classifier', classifiers[4])
+        , ('classifier', classifiers[0])
     ])
 
     # Train the model
@@ -209,7 +256,7 @@ if __name__ == '__main__':
     y_pred = pipe.predict(x_test)
 
     # Evaluate the performance
-    print("\nTraining ", classifier)
+    print("\nTraining ", str(classifiers[0]))
     accuracy = accuracy_score(y_test, y_pred)
 
     print("Accuracy on test set: ", accuracy)
