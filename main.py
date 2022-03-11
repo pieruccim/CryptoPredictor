@@ -9,12 +9,13 @@ from collections import Counter
 from sklearn import metrics
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.feature_selection import SelectKBest, chi2, f_regression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, KBinsDiscretizer
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -27,7 +28,7 @@ TEST_SIZE = 30 #60
 
 
 def scraper(crypto_name):
-    return web.get_data_yahoo(crypto_name, start="2020-02-24", end="2022-02-23")
+    return web.get_data_yahoo(crypto_name, start="2020-01-01", end="2021-12-31")
 
 
 def plot_graph(dataset):
@@ -168,10 +169,6 @@ if __name__ == '__main__':
 
     # we set the labels for each day: -1 DOWN, 0 FLAT and 1 UP
 
-    '''dataset['trend'][SHORT_WINDOW:] = np.where( dataset['diff_ema'][SHORT_WINDOW:] > 0,
-                                               1 if ((abs(dataset['diff_ema'][SHORT_WINDOW:]) > dataset['adj_close'][SHORT_WINDOW:] * FLAT_THRESHOLD).bool() == True) else 0,
-                                               -1 if (abs(dataset['diff_ema'][SHORT_WINDOW:]) > dataset['adj_close'][SHORT_WINDOW:] * FLAT_THRESHOLD).bool() else 0)'''
-
     for index, row in dataset.iterrows():
         if row.diff_ema > 0:
             if abs(row.diff_ema) > (row.adj_close * FLAT_THRESHOLD):
@@ -187,17 +184,14 @@ if __name__ == '__main__':
 
     #dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['volume'] = scraped_df['Volume']
-    # dataset['trend'] = dataset['trend'].replace(1, 'up')
-    # dataset['trend'] = dataset['trend'].replace(0, 'down')
 
     os.makedirs('data', exist_ok=True)
     dataset.to_csv('data/BTC_crypto_data.csv')
 
-    # print(dataset)
     dataset['trend'] = dataset['trend'].shift(-1)
     dataset = dataset.fillna(0)
 
-    plot_graph(dataset)
+    #plot_graph(dataset)
 
     predictors = ['open',
                   'high',

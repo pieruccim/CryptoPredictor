@@ -1,34 +1,20 @@
+from datetime import datetime
+from tornado import web
 
-import joblib
-import pandas as pd
-from main import create_preprocessor
-from sklearn.pipeline import Pipeline
 
-# LOAD AGAIN THE MODEL
+class Updater:
+    last_check_timestamp = None
+    last_date_mongo = None
 
-filename = 'model/crypto_predictor.pkl'
-clf = joblib.load(filename)
+    def __init__(self):
+        self.last_date_mongo = #query to retrieve the day of last date to mongo
+        self.last_check_timestamp = datetime.now()
 
-dataset = pd.read_csv('data/BTC_crypto_data.csv')
+    def scrape_from_yahoo(self, crypto_name, to_date=datetime.today().strftime('%Y-%m-%d')):
+        return web.get_data_yahoo(crypto_name, start=self.last_date_mongo, end=to_date)
 
-predictors = ['open',
-              'high',
-              'low',
-              'adj_close',
-              'ema_short',
-              'ema_long',
-              'volume'
-              ]
+    def evaluate_statistical_indicator(self):
+        return
 
-#tuple_to_predict = dataset.iloc[len(dataset.index)-1][predictors].to_frame()
-
-#dataset.drop(columns=['Date', 'diff_ema', 'trend', 'positions'], inplace=True)
-record_to_predict = dataset.loc[dataset['Date'] == '2021-09-30'][predictors]
-
-#preprocessor = create_preprocessor(predictors)
-
-#preprocessed_tuple_to_predict = preprocessor.transform(tuple_to_predict)
-print(record_to_predict)
-result = clf.predict(record_to_predict)
-
-print("Prediction for 2022-02-25: " + str(result))
+    def update_database(self):
+        return

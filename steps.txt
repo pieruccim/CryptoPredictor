@@ -1,0 +1,4 @@
+Steps:
+    1   -   Train the Classifier with tuples from 2020-01-01 to 2022-01-01. We store all historical data in Mongo to plot the graph,
+    2   -   Updater.py starts with the application itself, and check the last date present in MongoDB Y and scrape data from Y to today Y+k,
+    3   -   Evaluate statistical values for each missing day and insert the tuples into MongoDB.
