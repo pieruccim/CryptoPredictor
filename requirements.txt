@@ -1,5 +1,11 @@
-pandas
+pandas~=1.4.1
 pandas_datareader
-numpy
-matplotlib
-sklearn
+numpy~=1.22.2
+matplotlib~=3.5.1
+sklearn~=0.0
+python-dotenv~=0.19.2
+dash~=2.2.0
+joblib~=1.1.0
+scikit-learn~=1.0.2
+tornado~=6.1
+pymongo~=4.0.2
