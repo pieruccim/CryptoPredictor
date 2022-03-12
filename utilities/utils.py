@@ -1,13 +1,14 @@
 from dotenv import load_dotenv
 import os
 
+ENV_PATH = "../.env"
 
 class Utils:
-    env_path = "../.env"
 
     def __init__(self):
-        print(self.load_config("PROVA"))
+        pass
+        #print(self.load_config("PROVA"))
 
-    def load_config(self, config_key: str) -> str:
-        load_dotenv(self.env_path)
+    def load_config(config_key: str) -> str:
+        load_dotenv(ENV_PATH)
         return os.getenv(config_key)

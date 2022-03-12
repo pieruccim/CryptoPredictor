@@ -23,8 +23,7 @@ class MongoConnector:
 
     def connection_test(self):
         try:
-            client = pymongo.MongoClient(
-                "mongodb+srv://cryptopredictor:cryptopredictor@cluster0.lwnpx.mongodb.net/cryptopredictor?retryWrites=true&w=majority")
+            client = pymongo.MongoClient(self.CONNECTION_STRING)
             client.server_info()  # force connection on a request as the
             # connect=True parameter of MongoClient seems
             # to be useless here
