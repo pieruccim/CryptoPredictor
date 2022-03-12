@@ -68,7 +68,7 @@ app.layout = html.Div([
 '''
 index_page = html.Div([
     row_1, row_2, row_3
-])
+], style={'margin':200})
 
 bitcoin = html.Div([
     html.H1('bitcoin'),
@@ -102,7 +102,6 @@ binance = html.Div([
           [Input('page-2-radios', 'value')])
 def page_2_radios(value):
     return f'You have selected {value}'
-
 
 dash = html.Div([
     html.H1('dash'),

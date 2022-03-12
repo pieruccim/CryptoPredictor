@@ -1,13 +1,16 @@
 from datetime import datetime
 from tornado import web
+from persistence.MongoConnector import MongoConnector
 
 
 class Updater:
+    connection = MongoConnector()
     last_check_timestamp = None
     last_date_mongo = None
 
     def __init__(self):
-        self.last_date_mongo = #query to retrieve the day of last date to mongo
+        collection = self.connection.get_collection()
+        self.last_date_mongo = collection.find().sort({"Date": -1}).limit(1)
         self.last_check_timestamp = datetime.now()
 
     def scrape_from_yahoo(self, crypto_name, to_date=datetime.today().strftime('%Y-%m-%d')):
