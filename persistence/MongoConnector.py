@@ -4,13 +4,12 @@ from utilities.utils import Utils
 
 class MongoConnector:
     CONNECTION_STRING = Utils.load_config("CONNECTION_STRING")
-    DATABASE_NAME = "cryptopredictor"
-
-    COLLECTION_NAME = "bitcoin"
+    DATABASE_NAME = Utils.load_config("DATABASE_NAME")
 
     __mongo_client = pymongo.MongoClient(CONNECTION_STRING)
     __mongo_database = __mongo_client[DATABASE_NAME]
 
+    @staticmethod
     def get_collection(collection_name: str):
         return MongoConnector.__mongo_database.get_collection(collection_name)
 
@@ -22,12 +21,8 @@ class MongoConnector:
         return MongoConnector.__mongo_client
 
     def connection_test(self):
-        print(self.CONNECTION_STRING)
         try:
             client = pymongo.MongoClient(self.CONNECTION_STRING)
-            client.server_info()  # force connection on a request as the
-            # connect=True parameter of MongoClient seems
-            # to be useless here
+            client.server_info()
         except pymongo.errors.ServerSelectionTimeoutError as err:
-            # do whatever you need
             print(err)
