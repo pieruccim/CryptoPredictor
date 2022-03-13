@@ -18,7 +18,7 @@ for currency in CURRENCIES:
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dcc.Link(html.Button("PREDICTION"), href="/"+str(currency).lower(), refresh=True),
+                    dcc.Link(html.Button("PREDICTION"), href="/" + str(currency).lower(), refresh=True),
                     # dbc.Button("Go somewhere", color="primary"),
                 ]
             ),
@@ -61,21 +61,17 @@ app.layout = html.Div([
     html.Div(id='page-content')
 ])
 
-'''
-    dcc.Link('Go to Page 1', href='/page-1'),
-    html.Br(),
-    dcc.Link('Go to Page 2', href='/page-2'),
-'''
 index_page = html.Div([
+    html.H1("Crypto Predictor", style={'text-align': "center", 'marginBottom': 50, 'font-size': 70}),
     row_1, row_2, row_3
-], style={'margin':200})
+], style={'margin': 80})
 
 bitcoin = html.Div([
     html.H1('bitcoin'),
     dcc.Dropdown(['2020', '2021', '2022'], 'LA', id='page-1-dropdown'),
     html.Div(id='page-1-content'),
-    #html.Br(),
-    #dcc.Link('Go to Page 2', href='/page-2'),
+    # html.Br(),
+    # dcc.Link('Go to Page 2', href='/page-2'),
     html.Br(),
     dcc.Link('Go back to home', href='/'),
 ])
@@ -89,8 +85,8 @@ def page_1_dropdown(value):
 
 binance = html.Div([
     html.H1('binance'),
-    dcc.RadioItems(['Orange', 'Blue', 'Red'], 'Orange', id='page-2-radios'),
-    #dcc.Link('Go to Page 1', href='/page-1'),
+    dcc.RadioItems(id="page-2-radios", options=['Orange', 'Blue', 'Red'], value="Orange"),
+    # dcc.Link('Go to Page 1', href='/page-1'),
     html.Br(),
     html.Div(id='page-2-content'),
     html.Br(),
@@ -103,33 +99,35 @@ binance = html.Div([
 def page_2_radios(value):
     return f'You have selected {value}'
 
+
 dash = html.Div([
     html.H1('dash'),
     dcc.Link('Go back to home', href='/'),
-    #html.Div(id='page-2-content'),
+    # html.Div(id='page-2-content'),
     html.Br()
 ])
 
 ethereum = html.Div([
     html.H1('ethereum'),
     dcc.Link('Go back to home', href='/'),
-    #html.Div(id='page-2-content'),
+    # html.Div(id='page-2-content'),
     html.Br()
 ])
 
 litecoin = html.Div([
     html.H1('litecoin'),
     dcc.Link('Go back to home', href='/'),
-    #html.Div(id='page-2-content'),
+    # html.Div(id='page-2-content'),
     html.Br()
 ])
 
 monero = html.Div([
     html.H1('monero'),
     dcc.Link('Go back to home', href='/'),
-    #html.Div(id='page-2-content'),
+    # html.Div(id='page-2-content'),
     html.Br()
 ])
+
 
 # Update the index
 @callback(Output('page-content', 'children'),
