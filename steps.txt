@@ -2,3 +2,33 @@ Steps:
     1   -   Train the Classifier with tuples from 2020-01-01 to 2022-01-01. We store all historical data in Mongo to plot the graph,
     2   -   Updater.py starts with the application itself, and check the last date present in MongoDB Y and scrape data from Y to today Y+k,
     3   -   Evaluate statistical values for each missing day and insert the tuples into MongoDB.
+
+
+
+Classe Dataframe_Updater:
+
+- check_last_date_mongo():
+fa una query a mongo e ritorna la data più recente presente in mongo
+
+-get_missing_tuples(crypto_currency):
+va a recuperare, per una data valuta, tutte le tuple da yahoo finance comprese tra la data più recente in mongo fino aggi,
+ e con esse prende anche le 5 tuple precedenti alla data più recente in mongo. Ritorna le 5+X tuple delle date in un dataframe
+
+-compute_statistical_values(dataframe_of_tuples):
+riceve un dataframe (X-5,X-4,X-3,X-2,X-1,Y,Y+1,Y+2,...,Y+k  con X-1=tupla più recente presente in mongo
+ e Y tuple mancanti in mongo) relativo a una certa valuta e effettua i calcoli per gli EMA,
+lavora quindi sul dataframe stesso e lo restituisce modificato.
+In particolare usa le 5 tuple più recenti in mongo per calcolare gli EMA a partire dalla 1 tupla mancante in mongo
+
+-append_missing_tuples_to_mongo(collection_name, dataframe_con_EMA):
+va a fare l append del dataframe con le tuple mancanti in coda alla collezione di mongo,
+ sara necessario castare da dataframe a json
+
+-update_currencies_collections():
+aggiorna tutte le collezioni su mongo, per prima cosa chiama check_last_date_mongo su una collezione qualsiasi
+ (hanno tutte lo stesso livello di recentezza), se la data ritornata corrisponde a oggi non fa niente,
+ mentre se è diversa da oggi chiama get_missing_tuples per ogni collezione (valuta).
+ Il risultato è un dataframe per ogni valuta e viene dato in pasto a Compute_statistical_values
+ che restituisce il dataframe pronto per essere "incollato" in coda dentro la collezione di mongo di una certa valuta.
+  Infatti per ogni risultato di Compute_statistical_values chiama append_missing_tuples_to_mongo che aggiorna la collezione.
+   Questo metodo viene chiamato ad ogni avvio dell'applicazione.
