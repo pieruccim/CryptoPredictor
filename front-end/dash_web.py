@@ -1,9 +1,9 @@
 import dash_bootstrap_components as dbc
-from dash import Dash, dcc, html, Input, Output, callback
+import bitcoin#, ethereum, binance
+from dash import dcc, html, Input, Output, callback
+from app import app
 
-CURRENCIES = ["BITCOIN", "ETHEREUM", "RIPPLE", "LITECOIN", "BINANCE", "MONERO", "DASH", "ZCASH", "SOLANA"]
-
-app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.DARKLY])
+CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
 
 card_list = []
 for currency in CURRENCIES:
@@ -36,25 +36,7 @@ row_1 = dbc.Row(
     className="mb-4",
 )
 
-row_2 = dbc.Row(
-    [
-        dbc.Col(dbc.Card(card_list[3], color="success", outline=True)),
-        dbc.Col(dbc.Card(card_list[4], color="warning", outline=True)),
-        dbc.Col(dbc.Card(card_list[5], color="danger", outline=True)),
-    ],
-    className="mb-4",
-)
-
-row_3 = dbc.Row(
-    [
-        dbc.Col(dbc.Card(card_list[6], color="success", outline=True)),
-        dbc.Col(dbc.Card(card_list[7], color="warning", outline=True)),
-        dbc.Col(dbc.Card(card_list[8], color="danger", outline=True)),
-    ],
-    className="mb-4",
-)
-
-cards = html.Div([row_1, row_2, row_3])
+cards = html.Div([row_1])
 
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
@@ -63,70 +45,8 @@ app.layout = html.Div([
 
 index_page = html.Div([
     html.H1("Crypto Predictor", style={'text-align': "center", 'marginBottom': 50, 'font-size': 70}),
-    row_1, row_2, row_3
+    row_1
 ], style={'margin': 80})
-
-bitcoin = html.Div([
-    html.H1('bitcoin'),
-    dcc.Dropdown(['2020', '2021', '2022'], 'LA', id='page-1-dropdown'),
-    html.Div(id='page-1-content'),
-    # html.Br(),
-    # dcc.Link('Go to Page 2', href='/page-2'),
-    html.Br(),
-    dcc.Link('Go back to home', href='/'),
-])
-
-
-@callback(Output('page-1-content', 'children'),
-          [Input('page-1-dropdown', 'value')])
-def page_1_dropdown(value):
-    return f'You have selected {value}'
-
-
-binance = html.Div([
-    html.H1('binance'),
-    dcc.RadioItems(id="page-2-radios", options=['Orange', 'Blue', 'Red'], value="Orange"),
-    # dcc.Link('Go to Page 1', href='/page-1'),
-    html.Br(),
-    html.Div(id='page-2-content'),
-    html.Br(),
-    dcc.Link('Go back to home', href='/')
-])
-
-
-@callback(Output('page-2-content', 'children'),
-          [Input('page-2-radios', 'value')])
-def page_2_radios(value):
-    return f'You have selected {value}'
-
-
-dash = html.Div([
-    html.H1('dash'),
-    dcc.Link('Go back to home', href='/'),
-    # html.Div(id='page-2-content'),
-    html.Br()
-])
-
-ethereum = html.Div([
-    html.H1('ethereum'),
-    dcc.Link('Go back to home', href='/'),
-    # html.Div(id='page-2-content'),
-    html.Br()
-])
-
-litecoin = html.Div([
-    html.H1('litecoin'),
-    dcc.Link('Go back to home', href='/'),
-    # html.Div(id='page-2-content'),
-    html.Br()
-])
-
-monero = html.Div([
-    html.H1('monero'),
-    dcc.Link('Go back to home', href='/'),
-    # html.Div(id='page-2-content'),
-    html.Br()
-])
 
 
 # Update the index
@@ -134,17 +54,11 @@ monero = html.Div([
           [Input('url', 'pathname')])
 def display_page(pathname):
     if pathname == '/bitcoin':
-        return bitcoin
-    elif pathname == '/binance':
-        return binance
-    elif pathname == '/dash':
-        return dash
+        return bitcoin.layout
     elif pathname == '/ethereum':
-        return ethereum
-    elif pathname == '/litecoin':
-        return litecoin
-    elif pathname == '/monero':
-        return monero
+        return bitcoin.layout
+    elif pathname == '/binance':
+        return bitcoin.layout
     else:
         return index_page
     # You could also return a 404 "URL not found" page here
