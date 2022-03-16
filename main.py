@@ -20,7 +20,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
 SHORT_WINDOW = 2
-LONG_WINDOW = 4
+LONG_WINDOW = 5
 FLAT_THRESHOLD = 0.01
 
 N_SPLITS = 9 #28
