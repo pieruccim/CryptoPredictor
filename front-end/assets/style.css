@@ -1,0 +1,30 @@
+
+.container{
+    border: 0px;
+    padding: 0px;
+}
+
+.button{
+    display:inline-block;
+    text-decoration: none;
+
+    color:#4287f5;
+    brackground-color:transparent;
+    border:1px solid #4287f5;
+    text-transform: uppercase;
+
+    padding: .3em 1.2em;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+
+    background-size: 200% 100%;
+    background-image: linear-gradient(to right, transparent 50%, #4287f5 50%);
+    transition: background-position 1s cubic-bezier(0.19, 1, 0.22, 1) .1s, color .5s ease 0s, background-color .5s ease;
+}
+
+.button:hover{
+    color:rgba(255, 255, 255, 1);
+    background-color: #4287f5;
+    background-position: -100% 100%;
+}

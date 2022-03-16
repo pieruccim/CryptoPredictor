@@ -1,3 +1,4 @@
+import pymongo
 from dash import dcc, html
 import pandas as pd
 import plotly.graph_objs as go
@@ -7,7 +8,7 @@ from persistence.MongoConnector import MongoConnector
 
 # get the collection data from mongo
 collection = MongoConnector.get_collection("BTC")
-document = collection.find({}, {'Date': 1, 'adj_close': 1})  # .sort({"Date": -1})
+document = collection.find({}, {'Date': 1, 'adj_close': 1}).sort("Date", pymongo.DESCENDING)
 dff = pd.DataFrame.from_dict(document)
 
 # drop the _id column
@@ -64,8 +65,7 @@ def update_figure(year, range1, range2):
     ema_short = dff_apl['adj_close'].ewm(span=range1).mean()
     ema_long = dff_apl['adj_close'].ewm(span=range2).mean()
 
-    trace1 = go.Scatter(x=dff_apl['Date'], y=dff_apl['adj_close'],
-                        mode='lines', name='Crypto')
+    trace1 = go.Scatter(x=dff_apl['Date'], y=dff_apl['adj_close'], mode='lines', name='Crypto')
     trace_a = go.Scatter(x=dff_apl['Date'], y=ema_short, mode='lines', yaxis='y', name=f'Window {range1}')
     trace_b = go.Scatter(x=dff_apl['Date'], y=ema_long, mode='lines', yaxis='y', name=f'Window {range2}')
 
@@ -83,7 +83,8 @@ def update_figure(year, range1, range2):
                                      {"label": "5Y", "step": "all",
                                       "stepmode": "backward"}
                                  ]
-                             }}})
+                             }
+                         }})
 
     figure = {'data': [trace1],
               'layout': layout1

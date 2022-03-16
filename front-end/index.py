@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-import bitcoin   , ethereum, binance
+import bitcoin, ethereum, binance
 from dash import dcc, html, Input, Output, callback
 from app import app
 
@@ -12,14 +12,15 @@ for currency in CURRENCIES:
             dbc.CardImg(src="assets/" + str(currency) + ".png", top=True),
             dbc.CardBody(
                 [
-                    html.H4(currency, className="card-title"),
+                    html.H4(currency, className="card-title text-center"),
                     html.P(
                         "Some quick example text to build on the card title and "
                         "make up the bulk of the card's content.",
                         className="card-text",
                     ),
-                    dcc.Link(html.Button("PREDICTION"), href="/" + str(currency).lower(), refresh=True),
-                    # dbc.Button("Go somewhere", color="primary"),
+                    dcc.Link(html.Button("Prediction", className="button"),
+                             href="/" + str(currency).lower(),
+                             refresh=True, className="text-decoration-none")
                 ]
             ),
         ],
@@ -29,9 +30,9 @@ for currency in CURRENCIES:
 
 row_1 = dbc.Row(
     [
-        dbc.Col(dbc.Card(card_list[0], color="primary", outline=True)),
-        dbc.Col(dbc.Card(card_list[1], color="secondary", outline=True)),
-        dbc.Col(dbc.Card(card_list[2], color="info", outline=True)),
+        dbc.Col(dbc.Card(card_list[0], className="container", outline=True)),
+        dbc.Col(dbc.Card(card_list[1], className="container", outline=True)),
+        dbc.Col(dbc.Card(card_list[2], className="container", outline=True)),
     ],
     className="mb-4",
 )
