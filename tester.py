@@ -8,7 +8,7 @@ from sklearn.pipeline import Pipeline
 
 # LOAD AGAIN THE MODEL
 
-filename = 'model/crypto_predictor.pkl'
+filename = 'model/BTC-USD_classifier.pkl'
 clf = joblib.load(filename)
 
 predictors = ['open',

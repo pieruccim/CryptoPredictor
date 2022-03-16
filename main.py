@@ -18,15 +18,18 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
-SHORT_WINDOW = 2
-LONG_WINDOW = 5
-FLAT_THRESHOLD = 0.01
+SHORT_WINDOW = 3
+LONG_WINDOW = 6
+FLAT_THRESHOLD = 0.015
 
-N_SPLITS = 9 #28
-TEST_SIZE = 30 #60
+N_SPLITS = 9  # 28
+TEST_SIZE = 30  # 60
 
 EXPORT_DATAFRAME_ON_CSV = False
-EXPORT_CLASSIFIER = True
+EXPORT_CLASSIFIER = False
+
+CRYPTO_CURRENCY = "BTC-USD"
+
 
 def scraper(crypto_name):
     return web.get_data_yahoo(crypto_name, start="2020-01-01", end="2021-12-31")
@@ -64,7 +67,7 @@ def plot_graph(dataset):
              dataset.ema_long[dataset.positions == -1.0],
              'v', markersize=10, color='k', label='sell')'''
 
-    #plt.show()
+    # plt.show()
 
 
 def create_preprocessor(predictors):
@@ -86,7 +89,7 @@ def cross_validation(dataset, predictors, classifier):
 
     # n_splits is the number of subsets created
     # test_size is the number of records for each test sets
-    tscv = TimeSeriesSplit(gap=0, n_splits= N_SPLITS, test_size=TEST_SIZE)
+    tscv = TimeSeriesSplit(gap=0, n_splits=N_SPLITS, test_size=TEST_SIZE)
 
     accuracy_scores = []
     f1_scores_down = []
@@ -94,7 +97,7 @@ def cross_validation(dataset, predictors, classifier):
     f1_scores_up = []
     for train_index, test_index in tscv.split(dataset):
         print("--------------------------------------------------------------------------")
-        #print("TRAIN:", train_index, "\n TEST:", test_index)
+        # print("TRAIN:", train_index, "\n TEST:", test_index)
 
         train_dataset, test_dataset = dataset.iloc[train_index], dataset.iloc[test_index]
         x_train, x_test = train_dataset[predictors], test_dataset[predictors]
@@ -149,8 +152,7 @@ def cross_validation(dataset, predictors, classifier):
 
 
 if __name__ == '__main__':
-    crypto = "BTC-USD"
-    scraped_df = scraper(crypto)
+    scraped_df = scraper(CRYPTO_CURRENCY)
 
     # we evaluate the exponential moving average of the short and long windows
     ema_short = scraped_df['Adj Close'].ewm(span=SHORT_WINDOW).mean()
@@ -182,19 +184,20 @@ if __name__ == '__main__':
             else:
                 dataset.loc[index, 'trend'] = 0
 
-
-    #dataset['positions'] = dataset['trend'].shift(-1).diff()
+    # dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['volume'] = scraped_df['Volume']
 
-    #export the dataframe to csv
+    # export the dataframe to csv
     if (EXPORT_DATAFRAME_ON_CSV == True):
         os.makedirs('data', exist_ok=True)
-        dataset.to_csv('data/BTC_crypto_data.csv')
+        dataset.to_csv('data/' + CRYPTO_CURRENCY + '_data.csv')
 
     dataset['trend'] = dataset['trend'].shift(-1)
     dataset = dataset.fillna(0)
+    # we delete the last tuple that after shifting the dataframe lost its trend attribute value
+    dataset = dataset.iloc[:-1, :]
 
-    #plot_graph(dataset)
+    # plot_graph(dataset)
 
     predictors = ['open',
                   'high',
@@ -222,9 +225,11 @@ if __name__ == '__main__':
         overall_f1[str(classifier)] = str(f1_avg_down) + "\t" + str(f1_avg_flat) + "\t" + str(f1_avg_up)
 
     print("\n")
-    print("CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
+    print(
+        "CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
     for classifier in classifiers:
-        print(str(classifier) + "\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(overall_f1[str(classifier)]))
+        print(str(classifier) + "\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(
+            overall_f1[str(classifier)]))
 
     print("\nThe classifier that performs better in terms of Accuracy and F1-score is the " + str(classifiers[0]))
 
@@ -269,12 +274,10 @@ if __name__ == '__main__':
     y_final_train = dataset[['trend']]
 
     # SAVE THE MODEL
-    if(EXPORT_CLASSIFIER == True):
-        filename = 'model/crypto_predictor.pkl'
+    if (EXPORT_CLASSIFIER == True):
+        filename = 'model/' + CRYPTO_CURRENCY + '_classifier.pkl'
         final_pipe = Pipeline(steps=[
             ('preprocessor', preprocessor)
             , ('classifier', classifiers[0])
         ]).fit(x_final_train, y_final_train.values.ravel())
         joblib.dump(final_pipe, filename)
-
-

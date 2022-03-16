@@ -47,7 +47,7 @@ def plot_graph(dataset):
 
 
 if __name__ == '__main__':
-    dataframe = pandas.read_csv("data/BTC_crypto_data.csv")
+    dataframe = pandas.read_csv("data/BTC_data.csv")
 
     graph = plot_graph(dataframe)
 
