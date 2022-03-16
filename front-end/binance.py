@@ -26,10 +26,12 @@ for y in df.Year.unique().tolist():
 '''
 
 layout = html.Div([
+    dcc.Link('Back to Crypto Selection', href='/'),
+    html.Br(),
     html.Div([html.H1("Technical Analysis : Moving Average and Returns ")], style={'textAlign': "center"}),
     html.Div([
         html.Div([
-            html.Div([dcc.Graph(id="my-graph")], className="row", style={"margin": "auto"}),
+            html.Div([dcc.Graph(id="my-graph1")], className="row", style={"margin": "auto"}),
             html.Div([html.Div(dcc.RangeSlider(id="year selection", updatemode='drag',
                                                marks={i: '{}'.format(i) for i in df.Year.unique().tolist()},
                                                min=df.Year.min(), max=df.Year.max(),
@@ -52,7 +54,7 @@ layout = html.Div([
 
 
 @app.callback(
-    Output("my-graph", 'figure'),
+    Output("my-graph1", 'figure'),
     [Input("year selection", 'value'),
      Input("select-range1", 'value'),
      Input("select-range2", 'value')])

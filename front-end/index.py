@@ -1,5 +1,5 @@
 import dash_bootstrap_components as dbc
-import bitcoin#, ethereum, binance
+import bitcoin   , ethereum, binance
 from dash import dcc, html, Input, Output, callback
 from app import app
 
@@ -56,17 +56,13 @@ def display_page(pathname):
     if pathname == '/bitcoin':
         return bitcoin.layout
     elif pathname == '/ethereum':
-        return bitcoin.layout
+        return ethereum.layout
     elif pathname == '/binance':
-        return bitcoin.layout
+        return binance.layout
     else:
         return index_page
     # You could also return a 404 "URL not found" page here
 
-
-# Then we incorporate the snippet into our layout.
-# This example keeps it simple and just wraps it in a Container
-# app.layout = dbc.Container(cards, fluid=True)
 
 if __name__ == '__main__':
     app.run_server(debug=True)

@@ -26,6 +26,8 @@ for y in df.Year.unique().tolist():
 '''
 
 layout = html.Div([
+    dcc.Link('Back to Crypto Selection', href='/'),
+    html.Br(),
     html.Div([html.H1("Technical Analysis : Moving Average and Returns ")], style={'textAlign': "center"}),
     html.Div([
         html.Div([
