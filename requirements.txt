@@ -9,3 +9,4 @@ joblib~=1.1.0
 scikit-learn~=1.0.2
 tornado~=6.1
 pymongo~=4.0.2
+plotly~=5.5.0
