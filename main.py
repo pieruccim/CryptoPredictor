@@ -9,13 +9,12 @@ from collections import Counter
 from sklearn import metrics
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
-from sklearn.feature_selection import SelectKBest, chi2, f_regression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, KBinsDiscretizer
+from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -26,6 +25,8 @@ FLAT_THRESHOLD = 0.01
 N_SPLITS = 9 #28
 TEST_SIZE = 30 #60
 
+EXPORT_DATAFRAME_ON_CSV = False
+EXPORT_CLASSIFIER = True
 
 def scraper(crypto_name):
     return web.get_data_yahoo(crypto_name, start="2020-01-01", end="2021-12-31")
@@ -63,7 +64,7 @@ def plot_graph(dataset):
              dataset.ema_long[dataset.positions == -1.0],
              'v', markersize=10, color='k', label='sell')'''
 
-    plt.show()
+    #plt.show()
 
 
 def create_preprocessor(predictors):
@@ -185,8 +186,10 @@ if __name__ == '__main__':
     #dataset['positions'] = dataset['trend'].shift(-1).diff()
     dataset['volume'] = scraped_df['Volume']
 
-    os.makedirs('data', exist_ok=True)
-    dataset.to_csv('data/BTC_crypto_data.csv')
+    #export the dataframe to csv
+    if (EXPORT_DATAFRAME_ON_CSV == True):
+        os.makedirs('data', exist_ok=True)
+        dataset.to_csv('data/BTC_crypto_data.csv')
 
     dataset['trend'] = dataset['trend'].shift(-1)
     dataset = dataset.fillna(0)
@@ -266,12 +269,12 @@ if __name__ == '__main__':
     y_final_train = dataset[['trend']]
 
     # SAVE THE MODEL
-
-    filename = 'model/crypto_predictor.pkl'
-    final_pipe = Pipeline(steps=[
-        ('preprocessor', preprocessor)
-        , ('classifier', classifiers[0])
-    ]).fit(x_final_train, y_final_train.values.ravel())
-    joblib.dump(final_pipe, filename)
+    if(EXPORT_CLASSIFIER == True):
+        filename = 'model/crypto_predictor.pkl'
+        final_pipe = Pipeline(steps=[
+            ('preprocessor', preprocessor)
+            , ('classifier', classifiers[0])
+        ]).fit(x_final_train, y_final_train.values.ravel())
+        joblib.dump(final_pipe, filename)
 
 
