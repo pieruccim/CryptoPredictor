@@ -1,3 +1,4 @@
+import joblib
 import pymongo
 from dash import dcc, html
 import pandas as pd
@@ -5,6 +6,9 @@ import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 from app import app
 from persistence.MongoConnector import MongoConnector
+
+FROM_YEAR = 2020
+TO_YEAR = 2022
 
 # get the collection data from mongo
 collection = MongoConnector.get_collection("BTC")
@@ -19,24 +23,17 @@ df = dff[2:].reset_index()
 df['Year'] = pd.DatetimeIndex(df['Date']).year
 df['Month'] = pd.DatetimeIndex(df['Date']).month
 
-'''
-calendar=[]
-for y in df.Year.unique().tolist():
-    for m in df.Month.unique().tolist():
-        calendar.append(str(y) +"-"+ str("{:02d}".format(m)))
-'''
-
 layout = html.Div([
     dcc.Link('Back to Crypto Selection', href='/'),
     html.Br(),
-    html.Div([html.H1("Technical Analysis : Moving Average and Returns ")], style={'textAlign': "center"}),
+    html.Div([html.H1("Bitcoin Trend Prediction")], style={'textAlign': "center"}),
     html.Div([
         html.Div([
             html.Div([dcc.Graph(id="my-graph")], className="row", style={"margin": "auto"}),
             html.Div([html.Div(dcc.RangeSlider(id="year selection", updatemode='drag',
                                                marks={i: '{}'.format(i) for i in df.Year.unique().tolist()},
                                                min=df.Year.min(), max=df.Year.max(),
-                                               value=[2020, 2022]),
+                                               value=[FROM_YEAR, TO_YEAR]),
                                className="row",
                                style={"padding-bottom": 30, "padding-top": 30, "width": "60%", "margin": "auto"}),
                       html.Span("Moving Average :Select Window Interval", className="row", style={"padding-top": 30}),
@@ -50,8 +47,53 @@ layout = html.Div([
                       ], className="row")
         ], className="twelve columns", style={"margin-right": 0, "padding": 0}),
 
-    ], className="row")
+    ], className="row"),
+
+    # PREDICTION BUTTON
+    html.Div(
+        html.Button('PREDICT', id='my-button', className="button"),
+        style={"margin-top": 150, "margin-bottom": 150, "display": "flex", "justifyContent": "center", "font-size": "2em"}
+    ),
+    html.Br(),
+    html.Div(id='response', children='Click to predict trend',
+             style={"margin-top": 10, "margin-bottom": 100, "display": "flex", "justifyContent": "center"})
+
+
 ], className="container", style={"width": "100%"})
+
+
+@app.callback(Output('response', 'children'), [Input('my-button', 'n_clicks')])
+def on_click(button_click):
+    filename = '../model/BTC-USD_classifier.pkl'
+    clf = joblib.load(filename)
+
+    predictors = ['open',
+                  'high',
+                  'low',
+                  'adj_close',
+                  'ema_short',
+                  'ema_long',
+                  'volume'
+                  ]
+
+    # query to mongoDB for getting the tuple of today and convert it from dict to dataframe to better elaborate it
+    last_tuple = pd.DataFrame(list(collection.find().limit(1).sort("Date", pymongo.DESCENDING)))
+    # project only the predictors attributes
+    tuple_to_predict = last_tuple[predictors]
+    # use classifier to predict tuple class [-1, 0, 1] and send it back
+    result = clf.predict(tuple_to_predict)
+
+    # in case the button has never been pressed yet
+    if(button_click==None):
+        return None
+    # if we press the prediction button, or if we have already pressed it, show class prediction
+    else:
+        if(result==-1):
+            return html.Img(src="assets/down-trend.png")
+        elif(result==0):
+            return html.Img(src="assets/flat-trend.png")
+        elif(result==1):
+            return html.Img(src="assets/up-trend.png")
 
 
 @app.callback(
