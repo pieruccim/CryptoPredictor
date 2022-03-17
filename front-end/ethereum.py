@@ -29,7 +29,7 @@ layout = html.Div([
     html.Div([html.H1("Ethereum Trend Prediction")], style={'textAlign': "center"}),
     html.Div([
         html.Div([
-            html.Div([dcc.Graph(id="my-graph")], className="row", style={"margin": "auto"}),
+            html.Div([dcc.Graph(id="my-graph-ethereum")], className="row", style={"margin": "auto"}),
             html.Div([html.Div(dcc.RangeSlider(id="year selection", updatemode='drag',
                                                marks={i: '{}'.format(i) for i in df.Year.unique().tolist()},
                                                min=df.Year.min(), max=df.Year.max(),
@@ -55,16 +55,16 @@ layout = html.Div([
         style={"margin-top": 150, "margin-bottom": 150, "display": "flex", "justifyContent": "center", "font-size": "2em"}
     ),
     html.Br(),
-    html.Div(id='response', children='Click to predict trend',
+    html.Div(id='response-ethereum', children='Click to predict trend',
              style={"margin-top": 10, "margin-bottom": 100, "display": "flex", "justifyContent": "center"})
 
 
 ], className="container", style={"width": "100%"})
 
 
-@app.callback(Output('response', 'children'), [Input('my-button', 'n_clicks')])
+@app.callback(Output('response-ethereum', 'children'), [Input('my-button', 'n_clicks')])
 def on_click(button_click):
-    filename = '../model/BTC-USD_classifier.pkl'
+    filename = '../model/ETH-USD_classifier.pkl'
     clf = joblib.load(filename)
 
     predictors = ['open',
@@ -97,7 +97,7 @@ def on_click(button_click):
 
 
 @app.callback(
-    Output("my-graph", 'figure'),
+    Output("my-graph-ethereum", 'figure'),
     [Input("year selection", 'value'),
      Input("select-range1", 'value'),
      Input("select-range2", 'value')])
