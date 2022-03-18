@@ -48,7 +48,6 @@ def display_page(params):
     dff = pd.DataFrame.from_dict(document)
     # drop the _id column
     df = dff.iloc[:, 1:]
-    df = dff[2:].reset_index()
     df['Year'] = pd.DatetimeIndex(df['Date']).year
 
     layout = html.Div([
@@ -119,12 +118,6 @@ def on_click(button_click, params):
 
     # get the collection data from mongo
     collection = MongoConnector.get_collection(COLLECTION_NAME)
-    document = collection.find({}, {'Date': 1, 'adj_close': 1}).sort("Date", pymongo.DESCENDING)
-    dff = pd.DataFrame.from_dict(document)
-    # drop the _id column
-    df = dff.iloc[:, 1:]
-    df = dff[2:].reset_index()
-    df['Year'] = pd.DatetimeIndex(df['Date']).year
 
     # load classifier
     clf = joblib.load(FILENAME)
@@ -188,7 +181,6 @@ def update_figure(year, range1, range2, params):
     dff = pd.DataFrame.from_dict(document)
     # drop the _id column
     df = dff.iloc[:, 1:]
-    df = dff[2:].reset_index()
     df['Year'] = pd.DatetimeIndex(df['Date']).year
 
     dff_apl = df[(df["Year"] >= year[0]) & (df["Year"] <= year[1])]
