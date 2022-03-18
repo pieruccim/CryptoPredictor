@@ -1,7 +1,8 @@
 import dash_bootstrap_components as dbc
-import bitcoin, ethereum, binance
+import trend
 from dash import dcc, html, Input, Output, callback
 from app import app
+from utilities.utils import Utils
 
 CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
 
@@ -19,7 +20,7 @@ for currency in CURRENCIES:
                         className="card-text",
                     ),
                     dcc.Link(html.Button("Prediction", className="button"),
-                             href="/" + str(currency).lower(),
+                             href="/trend?currency="+ str(currency).lower(),
                              refresh=True, className="text-decoration-none")
                 ]
             ),
@@ -54,12 +55,8 @@ index_page = html.Div([
 @callback(Output('page-content', 'children'),
           [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/bitcoin':
-        return bitcoin.layout
-    elif pathname == '/ethereum':
-        return ethereum.layout
-    elif pathname == '/binance':
-        return binance.layout
+    if pathname.startswith("/trend"):
+        return trend.layout
     else:
         return index_page
     # You could also return a 404 "URL not found" page here
