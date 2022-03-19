@@ -2,6 +2,8 @@ import dash_bootstrap_components as dbc
 import trend
 from dash import dcc, html, Input, Output, callback
 from app import app
+
+from updater import Updater
 from utilities.utils import Utils
 
 CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
@@ -63,4 +65,7 @@ def display_page(pathname):
 
 
 if __name__ == '__main__':
+    up = Updater()
+    up.update_currencies_collections()
     app.run_server(debug=True)
+

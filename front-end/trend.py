@@ -51,42 +51,50 @@ def display_page(params):
     df['Year'] = pd.DatetimeIndex(df['Date']).year
 
     layout = html.Div([
-        dcc.Link('Back to Crypto Selection', href='/'),
+        dcc.Link('Back to Crypto Selection', href='/', className='button'),
         html.Br(),
-        html.Div([html.H1(CURRENCY + "Trend Prediction")], style={'textAlign': "center"}),
+        html.Div([html.H1(CURRENCY + " trend prediction")], style={'textAlign': "center"}),
         html.Div([
             html.Div([
-                html.Div([dcc.Graph(id="my-graph-bitcoin")], className="row", style={"margin": "auto"}),
-                html.Div([html.Div(dcc.RangeSlider(id="year selection", updatemode='drag',
-                                                   marks={i: '{}'.format(i) for i in df.Year.unique().tolist()},
-                                                   min=df.Year.min(), max=df.Year.max(),
-                                                   value=[FROM_YEAR, TO_YEAR]),
-                                   className="row",
-                                   style={"padding-bottom": 30, "padding-top": 30, "width": "60%",
-                                          "margin": "auto"}),
-                          html.Span("Moving Average :Select Window Interval", className="row",
-                                    style={"padding-top": 30}),
-                          html.Div(dcc.Slider(id="select-range1", updatemode='drag',
-                                              marks={i * 10: str(i * 10) for i in range(0, 21)},
-                                              min=0, max=50, value=12), className="row", style={"padding": 10}),
-                          html.Div(dcc.Slider(id="select-range2", updatemode='drag',
-                                              marks={i * 10: str(i * 10) for i in range(0, 21)},
-                                              min=0, max=100, value=50), className="row", style={"padding": 10})
+                html.Div([dcc.Graph(id="my-graph-bitcoin")], className="row", style={"margin": "auto", "margin-top": 30}),
+                html.Div([
+                    html.Div([html.Div(dcc.RangeSlider(id="year selection", updatemode='drag',
+                                                       marks={i: '{}'.format(i) for i in df.Year.unique().tolist()},
+                                                       min=df.Year.min(), max=df.Year.max(),
+                                                       value=[FROM_YEAR, TO_YEAR]),
+                                       className="row",
+                                       style={"padding-bottom": 30, "padding-top": 30, "width": "60%",
+                                              "margin": "auto"}),
+                              html.Span("Moving Average selection", className="row",
+                                        style={"padding-top": 30}),
+                              html.Div(dcc.Slider(id="select-range1", updatemode='drag',
+                                                  marks={i * 10: str(i * 10) for i in range(0, 21)},
+                                                  min=0, max=50, value=12), className="row", style={"padding": 10}),
+                              html.Div(dcc.Slider(id="select-range2", updatemode='drag',
+                                                  marks={i * 10: str(i * 10) for i in range(0, 21)},
+                                                  min=0, max=100, value=50), className="row", style={"padding": 10})
 
-                          ], className="row")
+                              ], className="col"),
+
+                    # Prediction Button
+                    html.Div(
+                        html.Button('PREDICT', id='my-button', className="button"),
+                        style={"margin-top": 150, "margin-bottom": 150, "display": "flex",
+                               "justifyContent": "center",
+                               "font-size": "2em"},
+                        className='col-3'
+                    ),
+
+                    # Result of the prediction
+                    html.Div(id='response-bitcoin', children='Click to predict trend',
+                             style={"margin-top": 10, "margin-bottom": 100, "display": "flex",
+                                    "justifyContent": "center"},
+                             className='col-3'
+                    )
+                ], className='row')
             ], className="twelve columns", style={"margin-right": 0, "padding": 0}),
 
         ], className="row"),
-
-        # PREDICTION BUTTON
-        html.Div(
-            html.Button('PREDICT', id='my-button', className="button"),
-            style={"margin-top": 150, "margin-bottom": 150, "display": "flex", "justifyContent": "center",
-                   "font-size": "2em"}
-        ),
-        html.Br(),
-        html.Div(id='response-bitcoin', children='Click to predict trend',
-                 style={"margin-top": 10, "margin-bottom": 100, "display": "flex", "justifyContent": "center"})
 
     ], className="container", style={"width": "100%"})
 
@@ -156,7 +164,7 @@ def on_click(button_click, params):
     [Input("year selection", 'value'),
      Input("select-range1", 'value'),
      Input("select-range2", 'value')],
-    Input('url-trend', 'search'))
+        Input('url-trend', 'search'))
 def update_figure(year, range1, range2, params):
     parsed = urllib.parse.urlparse(params)
     parsed_dict = urllib.parse.parse_qs(parsed.query)
@@ -193,7 +201,7 @@ def update_figure(year, range1, range2, params):
     trace_b = go.Scatter(x=dff_apl['Date'], y=ema_long, mode='lines', yaxis='y', name=f'Window {range2}')
 
     layout1 = go.Layout({'title': 'Crypto Trend With Moving Average',
-                         "legend": {"orientation": "h", "xanchor": "right"},
+                         "legend": {"orientation": "h", "xanchor": "left"},
                          "xaxis": {
                              "rangeselector": {
                                  "buttons": [
@@ -203,7 +211,7 @@ def update_figure(year, range1, range2, params):
                                       "stepmode": "backward"},
                                      {"count": 1, "label": "YTD", "step": "year",
                                       "stepmode": "todate"},
-                                     {"label": "5Y", "step": "all",
+                                     {"label": "2Y", "step": "all",
                                       "stepmode": "backward"}
                                  ]
                              }

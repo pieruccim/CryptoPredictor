@@ -27,14 +27,15 @@ class Updater:
     def get_missing_tuples(self, crypto_name):
 
         most_recent_date = self.check_last_date(crypto_name)
-        days = timedelta(Utils.load_config("LONG_WINDOW"))
+        days = timedelta(int(Utils.load_config("LONG_WINDOW")))
         most_recent_shifted = most_recent_date - days
 
-        print(most_recent_shifted)
+        print('Most recent date for ' + crypto_name + ': ' + str(most_recent_date))
 
+        one = timedelta(1)
         return web.get_data_yahoo(crypto_name+'-USD',
                                   start=most_recent_shifted.strftime('%Y-%m-%d'),
-                                  end=datetime.today().strftime('%Y-%m-%d'))
+                                  end=(datetime.today() - one).strftime('%Y-%m-%d'))
 
     def compute_statistical_values(self, original_df: pandas.DataFrame):
 
@@ -64,12 +65,15 @@ class Updater:
         # we change the Date field from datetime to string
         ema_df['Date'] = ema_df['Date'].astype('str')
 
-        # we need to drop some tuples already present in mongo, bus necessary to evaluate the statistical values
-        ema_df = ema_df.drop([0, 1, 2, 3, 4, 5])
+        # we need to drop some tuples already present in mongo, but necessary to evaluate the statistical values
+        ema_df = ema_df.drop([0, 1, 2, 3, 4])
 
         dict_df = ema_df.to_dict('records')
-        result = self.connection.get_collection(collection_name).insert_many(dict_df)
-        return result
+        if dict_df:
+            result = self.connection.get_collection(collection_name).insert_many(dict_df)
+            return result
+        else:
+            return False
 
     def update_currencies_collections(self):
 
