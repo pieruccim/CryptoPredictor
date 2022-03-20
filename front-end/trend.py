@@ -51,12 +51,16 @@ def display_page(params):
     df['Year'] = pd.DatetimeIndex(df['Date']).year
 
     layout = html.Div([
-        dcc.Link('Back to Crypto Selection', href='/', className='button'),
-        html.Br(),
-        html.Div([html.H1(CURRENCY + " trend prediction")], style={'textAlign': "center"}),
+        html.Div([
+            dcc.Link('Back', href='/', className='button col-1',
+                     style={'textAlign': "center", "margin-top": "auto", "margin-bottom": "auto", "font-size": 16}),
+            html.Div([html.H1(CURRENCY + " trend prediction")], style={'textAlign': "center", }, className='col-11')
+            ], className="row", style={"margin-top": 20}
+        ),
         html.Div([
             html.Div([
-                html.Div([dcc.Graph(id="my-graph-bitcoin")], className="row", style={"margin": "auto", "margin-top": 30}),
+                html.Div([dcc.Graph(id="my-graph-bitcoin")], className="row",
+                         style={"margin": "auto", "margin-top": 20}),
                 html.Div([
                     html.Div([html.Div(dcc.RangeSlider(id="year selection", updatemode='drag',
                                                        marks={i: '{}'.format(i) for i in df.Year.unique().tolist()},
@@ -79,7 +83,7 @@ def display_page(params):
                     # Prediction Button
                     html.Div(
                         html.Button('PREDICT', id='my-button', className="button"),
-                        style={"margin-top": 150, "margin-bottom": 150, "display": "flex",
+                        style={"margin-top": "auto", "margin-bottom": "auto", "display": "flex",
                                "justifyContent": "center",
                                "font-size": "2em"},
                         className='col-3'
@@ -87,10 +91,10 @@ def display_page(params):
 
                     # Result of the prediction
                     html.Div(id='response-bitcoin', children='Click to predict trend',
-                             style={"margin-top": 10, "margin-bottom": 100, "display": "flex",
-                                    "justifyContent": "center"},
+                             style={"display": "flex", "justifyContent": "center",
+                                    "margin-top": "auto", "margin-bottom": "auto"},
                              className='col-3'
-                    )
+                             )
                 ], className='row')
             ], className="twelve columns", style={"margin-right": 0, "padding": 0}),
 
@@ -152,11 +156,11 @@ def on_click(button_click, params):
     # if we press the prediction button, or if we have already pressed it, show class prediction
     else:
         if (result == -1):
-            return html.Img(src="assets/down-trend.png")
+            return html.Img(src="assets/down-trend.png", style={"height": 150, "width": 150})
         elif (result == 0):
-            return html.Img(src="assets/flat-trend.png")
+            return html.Img(src="assets/flat-trend.png", style={"height": 150, "width": 150})
         elif (result == 1):
-            return html.Img(src="assets/up-trend.png")
+            return html.Img(src="assets/up-trend.png", style={"height": 150, "width": 150})
 
 
 @app.callback(
@@ -164,7 +168,7 @@ def on_click(button_click, params):
     [Input("year selection", 'value'),
      Input("select-range1", 'value'),
      Input("select-range2", 'value')],
-        Input('url-trend', 'search'))
+    Input('url-trend', 'search'))
 def update_figure(year, range1, range2, params):
     parsed = urllib.parse.urlparse(params)
     parsed_dict = urllib.parse.parse_qs(parsed.query)
@@ -215,7 +219,10 @@ def update_figure(year, range1, range2, params):
                                       "stepmode": "backward"}
                                  ]
                              }
-                         }})
+                         },
+                         "font": {"family": "Arial"},
+                         "height": 500
+                         })
 
     figure = {'data': [trace1],
               'layout': layout1

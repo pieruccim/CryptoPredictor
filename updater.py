@@ -27,6 +27,7 @@ class Updater:
     def get_missing_tuples(self, crypto_name):
 
         most_recent_date = self.check_last_date(crypto_name)
+
         days = timedelta(int(Utils.load_config("LONG_WINDOW")))
         most_recent_shifted = most_recent_date - days
 
@@ -34,7 +35,7 @@ class Updater:
 
         one = timedelta(1)
         return web.get_data_yahoo(crypto_name+'-USD',
-                                  start=most_recent_shifted.strftime('%Y-%m-%d'),
+                                  start=(most_recent_shifted + one).strftime('%Y-%m-%d'),
                                   end=(datetime.today() - one).strftime('%Y-%m-%d'))
 
     def compute_statistical_values(self, original_df: pandas.DataFrame):

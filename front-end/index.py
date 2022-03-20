@@ -67,5 +67,7 @@ def display_page(pathname):
 if __name__ == '__main__':
     up = Updater()
     up.update_currencies_collections()
+
+    # debug mode is False because otherwise the updater() runs continously and overwrites mongo data
     app.run_server(debug=True)
 
