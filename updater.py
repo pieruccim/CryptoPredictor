@@ -67,7 +67,7 @@ class Updater:
         ema_df['Date'] = ema_df['Date'].astype('str')
 
         # we need to drop some tuples already present in mongo, but necessary to evaluate the statistical values
-        ema_df = ema_df.drop([0, 1, 2, 3, 4])
+        ema_df = ema_df.drop([0, 1, 2, 3, 4, 5])
 
         dict_df = ema_df.to_dict('records')
         if dict_df:

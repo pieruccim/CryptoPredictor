@@ -20,13 +20,14 @@ from sklearn.neighbors import KNeighborsClassifier
 
 SHORT_WINDOW = 3
 LONG_WINDOW = 6
-FLAT_THRESHOLD = 0.015
+FLAT_THRESHOLD = 0.01
 
 N_SPLITS = 9  # 28
 TEST_SIZE = 30  # 60
 
 EXPORT_DATAFRAME_ON_CSV = False
 EXPORT_CLASSIFIER = False
+PLOT_GRAPH = False
 
 CRYPTO_CURRENCY = "BTC-USD"
 
@@ -49,25 +50,24 @@ def plot_graph(dataset):
 
     plt.plot(dataset.loc[dataset.trend == 1.0].index,
              dataset.adj_close[dataset.trend == 1.0],
-             '^', markersize=8, color='g', label='up')
+             '^', markersize=6, color='g', label='up')
 
     plt.plot(dataset.loc[dataset.trend == 0.0].index,
              dataset.adj_close[dataset.trend == 0.0],
-             '^', markersize=8, color='y', label='flat')
+             'o', markersize=6, color='y', label='flat')
 
     plt.plot(dataset.loc[dataset.trend == -1.0].index,
              dataset.adj_close[dataset.trend == -1.0],
-             '^', markersize=8, color='r', label='down')
+             'v', markersize=6, color='r', label='down')
 
-    '''plt.plot(dataset.loc[dataset.positions == 1.0].index,
-             dataset.ema_short[dataset.positions == 1.0],
-             '^', markersize=10, color='r', label='buy')
 
-    plt.plot(dataset.loc[dataset.positions == -1.0].index,
-             dataset.ema_long[dataset.positions == -1.0],
-             'v', markersize=10, color='k', label='sell')'''
-
-    # plt.show()
+def plot_accuracy_cross_validation(clf, scores):
+    df_accuracy = pd.DataFrame(scores, columns=['accuracy'])
+    df_accuracy.plot()
+    plt.title(str(clf).replace('()', '') + ' accuracy in cross-validation', fontsize=16)
+    plt.xlabel("Iteration")
+    plt.ylabel("Accuracy")
+    plt.savefig('plots/plot-cross-validation/' + str(clf).replace('()', '') + '.png')
 
 
 def create_preprocessor(predictors):
@@ -148,7 +148,7 @@ def cross_validation(dataset, predictors, classifier):
     print("F1 OVERALL MEAN FOR LABEL -1: " + str(np.mean(f1_scores_down)) + " / FOR LABEL 0: " + str(
         np.mean(f1_scores_flat)) + " / FOR LABEL 1: " + str(
         np.mean(f1_scores_up)) + " FOR CLASSIFIER: " + str(classifier))
-    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up)
+    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up), accuracy_scores
 
 
 if __name__ == '__main__':
@@ -197,7 +197,11 @@ if __name__ == '__main__':
     # we delete the last tuple that after shifting the dataframe lost its trend attribute value
     dataset = dataset.iloc[:-1, :]
 
-    # plot_graph(dataset)
+    if PLOT_GRAPH:
+        plot_graph(dataset)
+        # we can only perform one: show() or savefig()
+        #plt.show()
+        plt.savefig('plots/labelled-graph.png')
 
     predictors = ['open',
                   'high',
@@ -220,15 +224,18 @@ if __name__ == '__main__':
     overall_accuracy_avg_means = {}
     overall_f1 = {}
     for classifier in classifiers:
-        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up = cross_validation(dataset, predictors, classifier)
+        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores = cross_validation(dataset, predictors, classifier)
+
+        # we plot the result of the cross validation iterations for each model
+        plot_accuracy_cross_validation(classifier, accuracy_scores)
+
         overall_accuracy_avg_means[str(classifier)] = avg_accuracy
         overall_f1[str(classifier)] = str(f1_avg_down) + "\t" + str(f1_avg_flat) + "\t" + str(f1_avg_up)
 
     print("\n")
-    print(
-        "CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
+    print("CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
     for classifier in classifiers:
-        print(str(classifier) + "\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(
+        print(str(classifier) + "\t\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(
             overall_f1[str(classifier)]))
 
     print("\nThe classifier that performs better in terms of Accuracy and F1-score is the " + str(classifiers[0]))
@@ -274,7 +281,7 @@ if __name__ == '__main__':
     y_final_train = dataset[['trend']]
 
     # SAVE THE MODEL
-    if (EXPORT_CLASSIFIER == True):
+    if EXPORT_CLASSIFIER:
         filename = 'model/' + CRYPTO_CURRENCY + '_classifier.pkl'
         final_pipe = Pipeline(steps=[
             ('preprocessor', preprocessor)
