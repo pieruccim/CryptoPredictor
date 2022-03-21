@@ -67,7 +67,25 @@ def plot_accuracy_cross_validation(clf, scores):
     plt.title(str(clf).replace('()', '') + ' accuracy in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
-    plt.savefig('plots/plot-cross-validation/' + str(clf).replace('()', '') + '.png')
+    plt.savefig('plots/plot-accuracy-cross-validation/' + str(clf).replace('()', '') + '.png')
+
+def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
+    #print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
+    try:
+        df_f1score = pd.DataFrame({
+            "f1_down": f1_down,
+            "f1_flat": f1_flat,
+            "f1_up": f1_up
+        })
+        df_f1score.fillna(0)
+        df_f1score.plot()
+    except:
+        pass
+
+    plt.title(str(clf).replace('()', '') + ' f score in cross-validation', fontsize=16)
+    plt.xlabel("Iteration")
+    plt.ylabel("F-Score")
+    plt.savefig('plots/plot-fscore-cross-validation/' + str(clf).replace('()', '') + '.png')
 
 
 def create_preprocessor(predictors):
@@ -148,7 +166,8 @@ def cross_validation(dataset, predictors, classifier):
     print("F1 OVERALL MEAN FOR LABEL -1: " + str(np.mean(f1_scores_down)) + " / FOR LABEL 0: " + str(
         np.mean(f1_scores_flat)) + " / FOR LABEL 1: " + str(
         np.mean(f1_scores_up)) + " FOR CLASSIFIER: " + str(classifier))
-    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up), accuracy_scores
+    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up), \
+           accuracy_scores, f1_scores_down, f1_scores_flat, f1_scores_up
 
 
 if __name__ == '__main__':
@@ -228,6 +247,7 @@ if __name__ == '__main__':
 
         # we plot the result of the cross validation iterations for each model
         plot_accuracy_cross_validation(classifier, accuracy_scores)
+        plot_fscore_cross_validation(classifier, f1_down, f1_flat, f1_up)
 
         overall_accuracy_avg_means[str(classifier)] = avg_accuracy
         overall_f1[str(classifier)] = str(f1_avg_down) + "\t" + str(f1_avg_flat) + "\t" + str(f1_avg_up)
