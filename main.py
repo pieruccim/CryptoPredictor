@@ -4,6 +4,7 @@ import pandas_datareader as web
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import warnings
 
 from collections import Counter
 from sklearn import metrics
@@ -17,6 +18,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+warnings.filterwarnings("ignore")
 
 SHORT_WINDOW = 3
 LONG_WINDOW = 6
@@ -219,8 +221,8 @@ if __name__ == '__main__':
     if PLOT_GRAPH:
         plot_graph(dataset)
         # we can only perform one: show() or savefig()
-        #plt.show()
-        plt.savefig('plots/labelled-graph.png')
+        plt.show()
+        #plt.savefig('plots/labelled-graph.png')
 
     predictors = ['open',
                   'high',
@@ -243,7 +245,7 @@ if __name__ == '__main__':
     overall_accuracy_avg_means = {}
     overall_f1 = {}
     for classifier in classifiers:
-        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores = cross_validation(dataset, predictors, classifier)
+        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores, f1_down, f1_flat, f1_up = cross_validation(dataset, predictors, classifier)
 
         # we plot the result of the cross validation iterations for each model
         plot_accuracy_cross_validation(classifier, accuracy_scores)
