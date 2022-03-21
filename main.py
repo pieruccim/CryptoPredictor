@@ -273,6 +273,9 @@ if __name__ == '__main__':
                                                         dataset[['trend']], test_size=.30,
                                                         shuffle=False, random_state=0)
 
+    print("Class label for training set : ", Counter(y_train['trend']))
+    print("Class label for test set : ", Counter(y_test['trend']))
+
     preprocessor = create_preprocessor(predictors)
 
     pipe = Pipeline(steps=[
