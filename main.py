@@ -4,6 +4,7 @@ import pandas_datareader as web
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import warnings
 
 from collections import Counter
 from sklearn import metrics
@@ -17,16 +18,17 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+warnings.filterwarnings("ignore")
 
-from utilities.utils import Utils
-
+SHORT_WINDOW = 3
+LONG_WINDOW = 6
 FLAT_THRESHOLD = 0.01
 
 N_SPLITS = 9  # 28
 TEST_SIZE = 30  # 60
 
 EXPORT_DATAFRAME_ON_CSV = False
-EXPORT_CLASSIFIER = True
+EXPORT_CLASSIFIER = False
 PLOT_GRAPH = False
 
 CRYPTO_CURRENCY = "BTC-USD"
@@ -42,8 +44,8 @@ def plot_graph(dataset):
     plt.ylabel("Adjusted Price")
 
     ax = dataset['adj_close'].plot(lw=3, figsize=(14, 7), label='Original observations')
-    dataset['ema_short'].plot(ax=ax, lw=3, label='EMA (window ' + Utils.load_config('SHORT_WINDOW') + ')')
-    dataset['ema_long'].plot(ax=ax, lw=3, label='EMA (window ' + Utils.load_config('LONG_WINDOW') + ')')
+    dataset['ema_short'].plot(ax=ax, lw=3, label='EMA (window ' + str(SHORT_WINDOW) + ')')
+    dataset['ema_long'].plot(ax=ax, lw=3, label='EMA (window ' + str(LONG_WINDOW) + ')')
 
     plt.tick_params(labelsize=12)
     plt.legend(loc='upper left', fontsize=12)
@@ -67,7 +69,25 @@ def plot_accuracy_cross_validation(clf, scores):
     plt.title(str(clf).replace('()', '') + ' accuracy in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
-    plt.savefig('plots/plot-cross-validation/' + str(clf).replace('()', '') + '.png')
+    plt.savefig('plots/plot-accuracy-cross-validation/' + str(clf).replace('()', '') + '.png')
+
+def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
+    #print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
+    try:
+        df_f1score = pd.DataFrame({
+            "f1_down": f1_down,
+            "f1_flat": f1_flat,
+            "f1_up": f1_up
+        })
+        df_f1score.fillna(0)
+        df_f1score.plot()
+    except:
+        pass
+
+    plt.title(str(clf).replace('()', '') + ' f score in cross-validation', fontsize=16)
+    plt.xlabel("Iteration")
+    plt.ylabel("F-Score")
+    plt.savefig('plots/plot-fscore-cross-validation/' + str(clf).replace('()', '') + '.png')
 
 
 def create_preprocessor(predictors):
@@ -148,15 +168,16 @@ def cross_validation(dataset, predictors, classifier):
     print("F1 OVERALL MEAN FOR LABEL -1: " + str(np.mean(f1_scores_down)) + " / FOR LABEL 0: " + str(
         np.mean(f1_scores_flat)) + " / FOR LABEL 1: " + str(
         np.mean(f1_scores_up)) + " FOR CLASSIFIER: " + str(classifier))
-    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up), accuracy_scores
+    return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up), \
+           accuracy_scores, f1_scores_down, f1_scores_flat, f1_scores_up
 
 
 if __name__ == '__main__':
     scraped_df = scraper(CRYPTO_CURRENCY)
 
     # we evaluate the exponential moving average of the short and long windows
-    ema_short = scraped_df['Adj Close'].ewm(span=int(Utils.load_config('SHORT_WINDOW'))).mean()
-    ema_long = scraped_df['Adj Close'].ewm(span=int(Utils.load_config('LONG_WINDOW'))).mean()
+    ema_short = scraped_df['Adj Close'].ewm(span=SHORT_WINDOW).mean()
+    ema_long = scraped_df['Adj Close'].ewm(span=LONG_WINDOW).mean()
 
     dataset = pd.DataFrame(index=scraped_df['Adj Close'].index)
     dataset['open'] = scraped_df['Open']
@@ -188,7 +209,7 @@ if __name__ == '__main__':
     dataset['volume'] = scraped_df['Volume']
 
     # export the dataframe to csv
-    if EXPORT_DATAFRAME_ON_CSV:
+    if (EXPORT_DATAFRAME_ON_CSV == True):
         os.makedirs('data', exist_ok=True)
         dataset.to_csv('data/' + CRYPTO_CURRENCY + '_data.csv')
 
@@ -200,8 +221,8 @@ if __name__ == '__main__':
     if PLOT_GRAPH:
         plot_graph(dataset)
         # we can only perform one: show() or savefig()
-        #plt.show()
-        plt.savefig('plots/labelled-graph.png')
+        plt.show()
+        #plt.savefig('plots/labelled-graph.png')
 
     predictors = ['open',
                   'high',
@@ -224,10 +245,11 @@ if __name__ == '__main__':
     overall_accuracy_avg_means = {}
     overall_f1 = {}
     for classifier in classifiers:
-        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores = cross_validation(dataset, predictors, classifier)
+        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores, f1_down, f1_flat, f1_up = cross_validation(dataset, predictors, classifier)
 
         # we plot the result of the cross validation iterations for each model
         plot_accuracy_cross_validation(classifier, accuracy_scores)
+        plot_fscore_cross_validation(classifier, f1_down, f1_flat, f1_up)
 
         overall_accuracy_avg_means[str(classifier)] = avg_accuracy
         overall_f1[str(classifier)] = str(f1_avg_down) + "\t" + str(f1_avg_flat) + "\t" + str(f1_avg_up)
@@ -250,6 +272,9 @@ if __name__ == '__main__':
     x_train, x_test, y_train, y_test = train_test_split(dataset[predictors],
                                                         dataset[['trend']], test_size=.30,
                                                         shuffle=False, random_state=0)
+
+    print("Class label for training set : ", Counter(y_train['trend']))
+    print("Class label for test set : ", Counter(y_test['trend']))
 
     preprocessor = create_preprocessor(predictors)
 
