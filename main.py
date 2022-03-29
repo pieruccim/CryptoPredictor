@@ -18,15 +18,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 
-SHORT_WINDOW = 3
-LONG_WINDOW = 6
+from utilities.utils import Utils
+
 FLAT_THRESHOLD = 0.01
 
 N_SPLITS = 9  # 28
 TEST_SIZE = 30  # 60
 
 EXPORT_DATAFRAME_ON_CSV = False
-EXPORT_CLASSIFIER = False
+EXPORT_CLASSIFIER = True
 PLOT_GRAPH = False
 
 CRYPTO_CURRENCY = "BTC-USD"
@@ -42,8 +42,8 @@ def plot_graph(dataset):
     plt.ylabel("Adjusted Price")
 
     ax = dataset['adj_close'].plot(lw=3, figsize=(14, 7), label='Original observations')
-    dataset['ema_short'].plot(ax=ax, lw=3, label='EMA (window ' + str(SHORT_WINDOW) + ')')
-    dataset['ema_long'].plot(ax=ax, lw=3, label='EMA (window ' + str(LONG_WINDOW) + ')')
+    dataset['ema_short'].plot(ax=ax, lw=3, label='EMA (window ' + Utils.load_config('SHORT_WINDOW') + ')')
+    dataset['ema_long'].plot(ax=ax, lw=3, label='EMA (window ' + Utils.load_config('LONG_WINDOW') + ')')
 
     plt.tick_params(labelsize=12)
     plt.legend(loc='upper left', fontsize=12)
@@ -155,8 +155,8 @@ if __name__ == '__main__':
     scraped_df = scraper(CRYPTO_CURRENCY)
 
     # we evaluate the exponential moving average of the short and long windows
-    ema_short = scraped_df['Adj Close'].ewm(span=SHORT_WINDOW).mean()
-    ema_long = scraped_df['Adj Close'].ewm(span=LONG_WINDOW).mean()
+    ema_short = scraped_df['Adj Close'].ewm(span=int(Utils.load_config('SHORT_WINDOW'))).mean()
+    ema_long = scraped_df['Adj Close'].ewm(span=int(Utils.load_config('LONG_WINDOW'))).mean()
 
     dataset = pd.DataFrame(index=scraped_df['Adj Close'].index)
     dataset['open'] = scraped_df['Open']
@@ -188,7 +188,7 @@ if __name__ == '__main__':
     dataset['volume'] = scraped_df['Volume']
 
     # export the dataframe to csv
-    if (EXPORT_DATAFRAME_ON_CSV == True):
+    if EXPORT_DATAFRAME_ON_CSV:
         os.makedirs('data', exist_ok=True)
         dataset.to_csv('data/' + CRYPTO_CURRENCY + '_data.csv')
 

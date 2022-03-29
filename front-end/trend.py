@@ -189,7 +189,7 @@ def update_figure(year, range1, range2, params):
 
     # get the collection data from mongo
     collection = MongoConnector.get_collection(COLLECTION_NAME)
-    document = collection.find({}, {'Date': 1, 'adj_close': 1}).sort("Date", pymongo.DESCENDING)
+    document = collection.find({}, {'Date': 1, 'adj_close': 1}).sort("Date", pymongo.ASCENDING)
     dff = pd.DataFrame.from_dict(document)
     # drop the _id column
     df = dff.iloc[:, 1:]
@@ -198,7 +198,9 @@ def update_figure(year, range1, range2, params):
     dff_apl = df[(df["Year"] >= year[0]) & (df["Year"] <= year[1])]
 
     ema_short = dff_apl['adj_close'].ewm(span=range1).mean()
+    print(ema_short)
     ema_long = dff_apl['adj_close'].ewm(span=range2).mean()
+    print(ema_long)
 
     trace1 = go.Scatter(x=dff_apl['Date'], y=dff_apl['adj_close'], mode='lines', name='Crypto')
     trace_a = go.Scatter(x=dff_apl['Date'], y=ema_short, mode='lines', yaxis='y', name=f'Window {range1}')

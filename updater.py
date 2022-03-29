@@ -28,7 +28,8 @@ class Updater:
 
         most_recent_date = self.check_last_date(crypto_name)
 
-        days = timedelta(int(Utils.load_config("LONG_WINDOW")))
+        # we retrieve historical data of the last month in order to evaluate ema
+        days = timedelta(30)
         most_recent_shifted = most_recent_date - days
 
         print('Most recent date for ' + crypto_name + ': ' + str(most_recent_date))
@@ -67,7 +68,7 @@ class Updater:
         ema_df['Date'] = ema_df['Date'].astype('str')
 
         # we need to drop some tuples already present in mongo, but necessary to evaluate the statistical values
-        ema_df = ema_df.drop([0, 1, 2, 3, 4, 5])
+        ema_df = ema_df.drop(list(range(30)))
 
         dict_df = ema_df.to_dict('records')
         if dict_df:
