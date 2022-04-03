@@ -63,16 +63,53 @@ def plot_graph(dataset):
              'v', markersize=6, color='r', label='down')
 
 
+def plot_pca_scatter(df, pred, crypto_name):
+    x = df[predictors]
+    y = df[['trend']]
+    classes = ['down', 'flat', 'up']
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    pre = create_preprocessor(pred, 3)
+    x_new_3d = pre.fit_transform(x)
+
+    scat = ax.scatter(x_new_3d[:, 0], x_new_3d[:, 1], x_new_3d[:, 2], c=y)
+    ax.set_title(crypto_name, fontsize=16)
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
+    ax.set_zlabel('PC3')
+    ax.legend(handles=scat.legend_elements()[0], labels=classes, loc='upper left', fontsize=12)
+
+    plt.savefig('plots/scatter_plots/pca_scatter_plot_3d_' + crypto_name + '.png')
+
+    y = df['trend']
+    fig2 = plt.figure()
+    ax = fig2.add_subplot(111)
+
+    pre2 = create_preprocessor(pred, 2)
+    x_new_2d = pre2.fit_transform(x)
+
+    scat2 = ax.scatter(x_new_2d[:, 0], x_new_2d[:, 1], c=y)
+    ax.set_title(crypto_name, fontsize=16)
+    ax.set_xlabel('PC1')
+    ax.set_ylabel('PC2')
+    ax.legend(handles=scat2.legend_elements()[0], labels=classes, loc='upper left', fontsize=12)
+
+    plt.savefig('plots/scatter_plots/pca_scatter_plot_2d_' + crypto_name + '.png')
+
+
 def plot_accuracy_cross_validation(clf, scores):
     df_accuracy = pd.DataFrame(scores, columns=['accuracy'])
     df_accuracy.plot()
-    plt.title(str(clf).replace('()', '') + ' accuracy in cross-validation', fontsize=16)
+    plt.title(str(clf).split('(')[0] + ' accuracy in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
-    plt.savefig('plots/plot-accuracy-cross-validation/' + str(clf).replace('()', '') + '.png')
+    plt.savefig('plots/plot-accuracy-cross-validation/' + str(clf).split('(')[0] + '.png')
+
 
 def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
-    #print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
+    # print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
     try:
         df_f1score = pd.DataFrame({
             "f1_down": f1_down,
@@ -84,16 +121,16 @@ def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
     except:
         pass
 
-    plt.title(str(clf).replace('()', '') + ' f score in cross-validation', fontsize=16)
+    plt.title(str(clf).split('(')[0] + ' f score in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
     plt.ylabel("F-Score")
-    plt.savefig('plots/plot-fscore-cross-validation/' + str(clf).replace('()', '') + '.png')
+    plt.savefig('plots/plot-fscore-cross-validation/' + str(clf).split('(')[0] + '.png')
 
 
-def create_preprocessor(predictors):
+def create_preprocessor(predictors, pca_comp):
     numeric_transformer = Pipeline(steps=[
         ('scaler', StandardScaler()),  # Standardize features by removing the mean and scaling to unit variance
-        ("pca", PCA())
+        ("pca", PCA(n_components=pca_comp))
     ])
 
     numeric_features = predictors
@@ -126,7 +163,7 @@ def cross_validation(dataset, predictors, classifier):
         print("Class label for training set : ", Counter(y_train['trend']))
         print("Class label for test set : ", Counter(y_test['trend']))
 
-        preprocessor = create_preprocessor(predictors)
+        preprocessor = create_preprocessor(predictors, None)
 
         pipe = Pipeline(steps=[
             ('preprocessor', preprocessor)
@@ -233,9 +270,11 @@ if __name__ == '__main__':
                   'volume'
                   ]
 
+    plot_pca_scatter(dataset, predictors, CRYPTO_CURRENCY.split('-')[0])
+
     # CLASSIFIERS TRAINING
     classifiers = [
-        RandomForestClassifier(),
+        RandomForestClassifier(criterion="entropy"),
         AdaBoostClassifier(),
         KNeighborsClassifier(),
         LogisticRegression(),
@@ -276,7 +315,7 @@ if __name__ == '__main__':
     print("Class label for training set : ", Counter(y_train['trend']))
     print("Class label for test set : ", Counter(y_test['trend']))
 
-    preprocessor = create_preprocessor(predictors)
+    preprocessor = create_preprocessor(predictors, None)
 
     pipe = Pipeline(steps=[
         ('preprocessor', preprocessor)
