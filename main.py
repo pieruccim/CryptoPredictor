@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import warnings
+import seaborn as sn
 
 from collections import Counter
 from sklearn import metrics
@@ -18,6 +19,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+
 warnings.filterwarnings("ignore")
 
 SHORT_WINDOW = 3
@@ -36,6 +38,19 @@ CRYPTO_CURRENCY = "BTC-USD"
 
 def scraper(crypto_name):
     return web.get_data_yahoo(crypto_name, start="2020-01-01", end="2021-12-31")
+
+
+def plot_correlation_matrix(dataset):
+    """Function plots a graphical correlation matrix for each pair of columns in the dataframe.
+        Input:
+            df: pandas DataFrame
+            size: vertical and horizontal size of the plot
+    """
+
+    print(dataset.head())
+    corrMatrix = dataset.corr()
+    sn.heatmap(corrMatrix, annot=True)
+    plt.show()
 
 
 def plot_graph(dataset):
@@ -71,8 +86,9 @@ def plot_accuracy_cross_validation(clf, scores):
     plt.ylabel("Accuracy")
     plt.savefig('plots/plot-accuracy-cross-validation/' + str(clf).replace('()', '') + '.png')
 
+
 def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
-    #print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
+    # print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
     try:
         df_f1score = pd.DataFrame({
             "f1_down": f1_down,
@@ -219,10 +235,11 @@ if __name__ == '__main__':
     dataset = dataset.iloc[:-1, :]
 
     if PLOT_GRAPH:
-        plot_graph(dataset)
+         plot_graph(dataset)
         # we can only perform one: show() or savefig()
-        plt.show()
-        #plt.savefig('plots/labelled-graph.png')
+         plt.show()
+         plt.savefig('plots/labelled-graph.png')
+        #plot_correlation_matrix(dataset)
 
     predictors = ['open',
                   'high',
@@ -245,7 +262,8 @@ if __name__ == '__main__':
     overall_accuracy_avg_means = {}
     overall_f1 = {}
     for classifier in classifiers:
-        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores, f1_down, f1_flat, f1_up = cross_validation(dataset, predictors, classifier)
+        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, accuracy_scores, f1_down, f1_flat, f1_up = cross_validation(
+            dataset, predictors, classifier)
 
         # we plot the result of the cross validation iterations for each model
         plot_accuracy_cross_validation(classifier, accuracy_scores)
@@ -255,7 +273,8 @@ if __name__ == '__main__':
         overall_f1[str(classifier)] = str(f1_avg_down) + "\t" + str(f1_avg_flat) + "\t" + str(f1_avg_up)
 
     print("\n")
-    print("CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
+    print(
+        "CLASSIFIER NAME \t\t\t\t\t ACCURACY MEAN \t\t F1 SCORE MEAN FOR -1 \t F1 SCORE MEAN FOR 0 \t F1 SCORE MEAN FOR 1")
     for classifier in classifiers:
         print(str(classifier) + "\t\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(
             overall_f1[str(classifier)]))
