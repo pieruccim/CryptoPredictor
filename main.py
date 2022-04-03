@@ -11,6 +11,7 @@ from collections import Counter
 from sklearn import metrics
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.feature_selection import SelectKBest, chi2, f_classif, mutual_info_classif, mutual_info_regression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import train_test_split, TimeSeriesSplit
@@ -34,6 +35,7 @@ EXPORT_CLASSIFIER = False
 PLOT_GRAPH = False
 
 CRYPTO_CURRENCY = "BTC-USD"
+BEST_CLASSIFIER = 3 #LinearRegression
 
 
 def scraper(crypto_name):
@@ -120,6 +122,7 @@ def plot_accuracy_cross_validation(clf, scores):
     plt.title(str(clf).split('(')[0] + ' accuracy in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
+    plt.ylim([0, 1])
     plt.savefig('plots/plot-accuracy-cross-validation/' + str(clf).split('(')[0] + '.png')
 
 
@@ -140,12 +143,14 @@ def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
     plt.title(str(clf).split('(')[0] + ' f score in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
     plt.ylabel("F-Score")
+    plt.ylim([0, 1])
     plt.savefig('plots/plot-fscore-cross-validation/' + str(clf).split('(')[0] + '.png')
 
 
 def create_preprocessor(predictors, pca_comp):
     numeric_transformer = Pipeline(steps=[
         ('scaler', StandardScaler()),  # Standardize features by removing the mean and scaling to unit variance
+        ('attributeSelection', SelectKBest(score_func=mutual_info_regression, k=7)),
         ("pca", PCA(n_components=pca_comp))
     ])
 
@@ -271,23 +276,23 @@ if __name__ == '__main__':
     # we delete the last tuple that after shifting the dataframe lost its trend attribute value
     dataset = dataset.iloc[:-1, :]
 
-    if PLOT_GRAPH:
-         plot_graph(dataset)
-        # we can only perform one: show() or savefig()
-         plt.show()
-         plt.savefig('plots/labelled-graph.png')
-        #plot_correlation_matrix(dataset)
-
     predictors = ['open',
                   'high',
                   'low',
                   'adj_close',
                   'ema_short',
                   'ema_long',
+                  'diff_ema',
                   'volume'
                   ]
 
-    plot_pca_scatter(dataset, predictors, CRYPTO_CURRENCY.split('-')[0])
+    if PLOT_GRAPH:
+        plot_graph(dataset)
+        # we can only perform one: show() or savefig()
+        plt.show()
+        plt.savefig('plots/labelled-graph.png')
+        #plot_correlation_matrix(dataset)
+        #plot_pca_scatter(dataset, predictors, CRYPTO_CURRENCY.split('-')[0])
 
     # CLASSIFIERS TRAINING
     classifiers = [
@@ -318,7 +323,7 @@ if __name__ == '__main__':
         print(str(classifier) + "\t\t\t\t" + str(overall_accuracy_avg_means[str(classifier)]) + "\t" + str(
             overall_f1[str(classifier)]))
 
-    print("\nThe classifier that performs better in terms of Accuracy and F1-score is the " + str(classifiers[0]))
+    print("\nThe classifier that performs better in terms of Accuracy and F1-score is the " + str(classifiers[BEST_CLASSIFIER]))
 
     # TRAINING WITH THE FINAL MODEL
 
@@ -338,7 +343,7 @@ if __name__ == '__main__':
 
     pipe = Pipeline(steps=[
         ('preprocessor', preprocessor)
-        , ('classifier', classifiers[0])
+        , ('classifier', classifiers[BEST_CLASSIFIER])
     ])
 
     # Train the model
@@ -348,7 +353,7 @@ if __name__ == '__main__':
     y_pred = pipe.predict(x_test)
 
     # Evaluate the performance
-    print("\nTraining ", str(classifiers[0]))
+    print("\nTraining ", str(classifiers[BEST_CLASSIFIER]))
     accuracy = accuracy_score(y_test, y_pred)
 
     print("Accuracy on test set: ", accuracy)
@@ -368,6 +373,6 @@ if __name__ == '__main__':
         filename = 'model/' + CRYPTO_CURRENCY + '_classifier.pkl'
         final_pipe = Pipeline(steps=[
             ('preprocessor', preprocessor)
-            , ('classifier', classifiers[0])
+            , ('classifier', classifiers[BEST_CLASSIFIER])
         ]).fit(x_final_train, y_final_train.values.ravel())
         joblib.dump(final_pipe, filename)
