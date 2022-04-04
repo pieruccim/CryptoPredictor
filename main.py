@@ -162,13 +162,13 @@ def ranking_attributes_contribution(dataset):
     X = dataset[predictors]  # independent columns
     y = dataset[['trend']]  # target column
 
-    bestfeatures = SelectKBest(score_func=mutual_info_regression, k='all')
-    fit = bestfeatures.fit(X, y)
-    dfscores = pd.DataFrame(fit.scores_)
-    dfcolumns = pd.DataFrame(X.columns)
+    best_features = SelectKBest(score_func=mutual_info_regression, k='all')
+    fit = best_features.fit(X, y)
+    df_scores = pd.DataFrame(fit.scores_)
+    df_columns = pd.DataFrame(X.columns)
 
     # concat two dataframes for better visualization
-    featureScores = pd.concat([dfcolumns, dfscores], axis=1)
+    featureScores = pd.concat([df_columns, df_scores], axis=1)
     featureScores.columns = ['Specs', 'Score']  # naming the dataframe columns
     print(featureScores.nlargest(8, 'Score'))
 
@@ -338,8 +338,8 @@ if __name__ == '__main__':
     overall_up = {}
 
     for classifier in classifiers:
-        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, precision_avg_down, precision_avg_flat,\
-        precision_avg_up, recall_avg_down, recall_avg_flat, recall_avg_up, accuracy_scores,\
+        avg_accuracy, f1_avg_down, f1_avg_flat, f1_avg_up, precision_avg_down, precision_avg_flat,  \
+        precision_avg_up, recall_avg_down, recall_avg_flat, recall_avg_up, accuracy_scores,         \
         f1_down, f1_flat, f1_up = cross_validation(dataset, predictors, classifier)
 
         # we plot the result of the cross validation iterations for each model
