@@ -1,3 +1,5 @@
+import statistics
+
 import joblib
 import pandas as pd
 import pandas_datareader as web
@@ -127,17 +129,15 @@ def plot_accuracy_cross_validation(clf, scores):
 
 
 def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
-    # print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
-    try:
-        df_f1score = pd.DataFrame({
-            "f1_down": f1_down,
-            "f1_flat": f1_flat,
-            "f1_up": f1_up
-        })
-        df_f1score.fillna(0)
-        df_f1score.plot()
-    except:
-        pass
+    print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
+
+    f1_avg = []
+    for i in range(len(f1_up)):
+        list_float = [f1_down[i], f1_flat[i], f1_up[i]]
+        f1_avg.append(statistics.mean(list_float))
+
+    df_f1score = pd.DataFrame(f1_avg, columns=['f_scores'])
+    df_f1score.plot()
 
     plt.title(str(clf).split('(')[0] + ' f score in cross-validation', fontsize=16)
     plt.xlabel("Iteration")
@@ -235,18 +235,21 @@ def cross_validation(dataset, predictors, classifier):
             precision_scores_down.append(precision[0])
             recall_scores_down.append(recall[0])
         except Exception as e:
+            f1_scores_down.append(0)
             print("Exception: " + str(e))
         try:
             f1_scores_flat.append(f1[1])
             precision_scores_flat.append(precision[1])
             recall_scores_flat.append(recall[1])
         except Exception as e:
+            f1_scores_flat.append(0)
             print("Exception: " + str(e))
         try:
             f1_scores_up.append(f1[2])
             precision_scores_up.append(precision[2])
             recall_scores_up.append(recall[2])
         except Exception as e:
+            f1_scores_up.append(0)
             print("Exception: " + str(e))
 
     print("ACCURACY OVERALL MEAN: " + str(np.mean(accuracy_scores)) + " FOR CLASSIFIER: " + str(classifier))
