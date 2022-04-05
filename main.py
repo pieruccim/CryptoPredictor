@@ -30,7 +30,7 @@ LONG_WINDOW = 6
 FLAT_THRESHOLD = 0.01
 
 N_SPLITS = 9  # 28
-TEST_SIZE = 30  # 60
+TEST_SIZE = 60  # 30
 
 EXPORT_DATAFRAME_ON_CSV = False
 EXPORT_CLASSIFIER = False
@@ -129,7 +129,7 @@ def plot_accuracy_cross_validation(clf, scores):
 
 
 def plot_fscore_cross_validation(clf, f1_down, f1_flat, f1_up):
-    print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
+    #print(str(f1_down)+","+str(f1_flat)+","+str(f1_up))
 
     f1_avg = []
     for i in range(len(f1_up)):
@@ -232,30 +232,62 @@ def cross_validation(dataset, predictors, classifier):
 
         try:
             f1_scores_down.append(f1[0])
-            precision_scores_down.append(precision[0])
-            recall_scores_down.append(recall[0])
         except Exception as e:
             f1_scores_down.append(0)
             print("Exception: " + str(e))
         try:
+            precision_scores_down.append(precision[0])
+        except Exception as e:
+            precision_scores_down.append(0)
+            print("Exception: " + str(e))
+        try:
+            recall_scores_down.append(recall[0])
+        except Exception as e:
+            recall_scores_down.append(0)
+            print("Exception: " + str(e))
+
+        try:
             f1_scores_flat.append(f1[1])
-            precision_scores_flat.append(precision[1])
-            recall_scores_flat.append(recall[1])
         except Exception as e:
             f1_scores_flat.append(0)
             print("Exception: " + str(e))
         try:
+            precision_scores_flat.append(precision[1])
+        except Exception as e:
+            precision_scores_flat.append(0)
+            print("Exception: " + str(e))
+        try:
+            recall_scores_flat.append(recall[1])
+        except Exception as e:
+            recall_scores_flat.append(0)
+            print("Exception: " + str(e))
+
+        try:
             f1_scores_up.append(f1[2])
-            precision_scores_up.append(precision[2])
-            recall_scores_up.append(recall[2])
         except Exception as e:
             f1_scores_up.append(0)
+            print("Exception: " + str(e))
+
+        try:
+            precision_scores_up.append(precision[2])
+        except:
+            precision_scores_up.append(0)
+            print("Exception: " + str(e))
+        try:
+            recall_scores_up.append(recall[2])
+        except Exception as e:
+            recall_scores_up.append(0)
             print("Exception: " + str(e))
 
     print("ACCURACY OVERALL MEAN: " + str(np.mean(accuracy_scores)) + " FOR CLASSIFIER: " + str(classifier))
     print("F1 OVERALL MEAN FOR LABEL -1: " + str(np.mean(f1_scores_down)) + " / FOR LABEL 0: " + str(
         np.mean(f1_scores_flat)) + " / FOR LABEL 1: " + str(
         np.mean(f1_scores_up)) + " FOR CLASSIFIER: " + str(classifier))
+
+    print(precision_scores_down, precision_scores_flat, precision_scores_flat)
+    print(recall_scores_down, recall_scores_flat, recall_scores_up)
+    print(f1_scores_down, f1_scores_flat, f1_scores_up)
+
     return np.mean(accuracy_scores), np.mean(f1_scores_down), np.mean(f1_scores_flat), np.mean(f1_scores_up),   \
            np.mean(precision_scores_down), np.mean(precision_scores_flat), np.mean(precision_scores_up),        \
            np.mean(recall_scores_down),  np.mean(recall_scores_flat), np.mean(recall_scores_up),                \
