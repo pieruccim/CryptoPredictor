@@ -8,26 +8,34 @@ from utilities.utils import Utils
 
 CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
 
+DESCRIPTIONS = {"BITCOIN": "Bitcoin is the world’s most traded cryptocurrency, representing a huge slice of the "
+                           "crypto market pie.",
+                "ETHEREUM": "Ethereum is a platform for "
+                            "creating decentralized applications based on blockchain and smart contract technology.",
+                "BINANCE": "Binance Coin is a cryptocurrency that can be used to trade and pay fees on the "
+                           "Binance cryptocurrency exchange. "
+                }
+
 card_list = []
 for currency in CURRENCIES:
     card = dbc.Card(
         [
-            dbc.CardImg(src="assets/" + str(currency) + ".png", top=True),
+            dbc.CardImg(src="assets/" + str(currency) + ".png", top=True, className="p-5"),
             dbc.CardBody(
                 [
                     html.H4(currency, className="card-title text-center"),
                     html.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
+                        DESCRIPTIONS[str(currency)],
                         className="card-text",
+                        style={"height": "12vh"}
                     ),
                     dcc.Link(html.Button("Prediction", className="button"),
-                             href="/trend?currency="+ str(currency).lower(),
+                             href="/trend?currency=" + str(currency).lower(),
                              refresh=True, className="text-decoration-none")
                 ]
             ),
         ],
-        style={"width": "auto"},
+        style={"width": "auto"}
     )
     card_list.append(card)
 
@@ -69,5 +77,4 @@ if __name__ == '__main__':
     up.update_currencies_collections()
 
     # debug mode is False because otherwise the updater() runs continously and overwrites mongo data
-    app.run_server(debug=True)
-
+    app.run_server(debug=False)
