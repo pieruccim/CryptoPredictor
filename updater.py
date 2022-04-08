@@ -11,12 +11,6 @@ class Updater:
     last_check_timestamp = None
     #last_date_mongo = None
 
-    '''
-    def __init__(self):
-        self.last_date_mongo = self.check_last_date('bitcoin')
-        self.last_check_timestamp = datetime.now()
-    '''
-
     def check_last_date(self, collection_name: str):
 
         collection = self.connection.get_collection(collection_name)
