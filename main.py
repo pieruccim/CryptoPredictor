@@ -2,12 +2,14 @@ import joblib
 import pandas as pd
 import pandas_datareader as web
 import matplotlib.pyplot as plt
+import numpy as np
 import os
 import warnings
 
 
 from collections import Counter
 from sklearn import metrics
+from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.feature_selection import SelectKBest, mutual_info_regression
 from sklearn.linear_model import LogisticRegression
@@ -215,3 +217,9 @@ if __name__ == '__main__':
 
     #ranking_attributes_contribution(dataset.iloc[0:500])
 
+    pca = PCA().fit(x_train)
+    plt.clf()
+    plt.plot(np.cumsum(pca.explained_variance_ratio_))
+    plt.xlabel('number of components')
+    plt.ylabel('cumulative explained variance')
+    plt.show()

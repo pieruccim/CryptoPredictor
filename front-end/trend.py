@@ -198,9 +198,7 @@ def update_figure(year, range1, range2, params):
     dff_apl = df[(df["Year"] >= year[0]) & (df["Year"] <= year[1])]
 
     ema_short = dff_apl['adj_close'].ewm(span=range1).mean()
-    print(ema_short)
     ema_long = dff_apl['adj_close'].ewm(span=range2).mean()
-    print(ema_long)
 
     trace1 = go.Scatter(x=dff_apl['Date'], y=dff_apl['adj_close'], mode='lines', name='Crypto')
     trace_a = go.Scatter(x=dff_apl['Date'], y=ema_short, mode='lines', yaxis='y', name=f'Window {range1}')
