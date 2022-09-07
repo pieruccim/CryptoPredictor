@@ -3,15 +3,13 @@ import importlib
 from dash import Dash
 from dash import dcc, html, Input, Output, callback
 
-foobar = importlib.import_module("front-end")
-
+frontend = importlib.import_module("front-end.trend")
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.DARKLY])
 server = app.server
 
 # debug mode is False because otherwise the updater() runs continously and overwrites mongo data
 app.title = 'Crypto Predictor'
-#app.run_server(debug=False)
 
 
 CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
