@@ -25,7 +25,7 @@ card_list = []
 for currency in CURRENCIES:
     card = dbc.Card(
         [
-            dbc.CardImg(src="front-end/assets/" + str(currency) + ".png", top=True, className="p-5"),
+            dbc.CardImg(src="assets/" + str(currency) + ".png", top=True, className="p-5"),
             dbc.CardBody(
                 [
                     html.H4(currency, className="card-title text-center"),
