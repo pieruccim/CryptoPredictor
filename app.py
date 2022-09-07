@@ -11,7 +11,7 @@ server = app.server
 
 # debug mode is False because otherwise the updater() runs continously and overwrites mongo data
 app.title = 'Crypto Predictor'
-app.run_server(debug=False)
+#app.run_server(debug=False)
 
 
 CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
