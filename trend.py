@@ -7,7 +7,7 @@ import pandas as pd
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
 
-import app
+from app import app
 from persistence.MongoConnector import MongoConnector
 
 FROM_YEAR = 2020
@@ -116,18 +116,18 @@ def on_click(button_click, params):
     try:
         if "bitcoin" in parsed_dict["currency"]:
             COLLECTION_NAME = "BTC"
-            FILENAME = '../model/BTC-USD_classifier.pkl'
+            FILENAME = 'model/BTC-USD_classifier.pkl'
 
         elif "ethereum" in parsed_dict["currency"]:
             COLLECTION_NAME = "ETH"
-            FILENAME = '../model/ETH-USD_classifier.pkl'
+            FILENAME = 'model/ETH-USD_classifier.pkl'
 
         elif "binance" in parsed_dict["currency"]:
             COLLECTION_NAME = "BNB"
-            FILENAME = '../model/BNB-USD_classifier.pkl'
+            FILENAME = 'model/BNB-USD_classifier.pkl'
     except:
         COLLECTION_NAME = "BTC"
-        FILENAME = '../model/BTC-USD_classifier.pkl'
+        FILENAME = 'model/BTC-USD_classifier.pkl'
 
     # get the collection data from mongo
     collection = MongoConnector.get_collection(COLLECTION_NAME)

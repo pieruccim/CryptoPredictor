@@ -2,8 +2,7 @@ import dash_bootstrap_components as dbc
 import importlib
 from dash import Dash
 from dash import dcc, html, Input, Output, callback
-
-frontend = importlib.import_module("front-end.trend")
+import trend
 
 app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=[dbc.themes.DARKLY])
 server = app.server
