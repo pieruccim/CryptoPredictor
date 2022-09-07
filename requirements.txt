@@ -11,5 +11,5 @@ tornado~=6.1
 pymongo~=4.0.2
 plotly~=5.5.0
 gunicorn
-dash-bootstrap-components
+dash-bootstrap-components>=1.2.1
 
