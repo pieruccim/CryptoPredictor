@@ -19,15 +19,32 @@ layout = html.Div([
 ])
 
 app.index_string = """
-        <!-- Google tag (gtag.js) -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-8CQETSHL97"></script>
-        <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-
-          gtag('config', 'G-8CQETSHL97');
-        </script>"""
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                        <!-- Google tag (gtag.js) -->
+                        <script async src="https://www.googletagmanager.com/gtag/js?id=G-8CQETSHL97"></script>
+                        <script>
+                          window.dataLayer = window.dataLayer || [];
+                          function gtag(){dataLayer.push(arguments);}
+                          gtag('js', new Date());
+                        
+                          gtag('config', 'G-8CQETSHL97');
+                        </script>
+                        {%metas%}
+                        <title>{%title%}</title>
+                        {%favicon%}
+                        {%css%}
+                    </head>
+                    <body>
+                        {%app_entry%}
+                        <footer>
+                            {%config%}
+                            {%scripts%}
+                            {%renderer%}
+                        </footer>
+                    </body>
+                </html>"""
 
 
 @app.callback(Output('page-content-trend', 'children'),
