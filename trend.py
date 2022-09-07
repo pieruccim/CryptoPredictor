@@ -157,11 +157,11 @@ def on_click(button_click, params):
     # if we press the prediction button, or if we have already pressed it, show class prediction
     else:
         if (result == -1):
-            return html.Img(src="assets/down-trend.png", style={"height": 150, "width": 150})
+            return html.Img(src="./assets/down-trend.png", style={"height": 150, "width": 150})
         elif (result == 0):
-            return html.Img(src="assets/flat-trend.png", style={"height": 150, "width": 150})
+            return html.Img(src="./assets/flat-trend.png", style={"height": 150, "width": 150})
         elif (result == 1):
-            return html.Img(src="assets/up-trend.png", style={"height": 150, "width": 150})
+            return html.Img(src="./assets/up-trend.png", style={"height": 150, "width": 150})
 
 
 @app.callback(
