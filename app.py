@@ -11,6 +11,17 @@ server = app.server
 # debug mode is False because otherwise the updater() runs continously and overwrites mongo data
 app.title = 'Crypto Predictor'
 
+app.index_string = """
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-8CQETSHL97"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+        
+          gtag('config', 'G-8CQETSHL97');
+        </script>"""
+
 CURRENCIES = ["BITCOIN", "ETHEREUM", "BINANCE"]
 
 DESCRIPTIONS = {"BITCOIN": "Bitcoin is the world’s most traded cryptocurrency, representing a huge slice of the "
