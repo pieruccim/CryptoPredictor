@@ -6,7 +6,8 @@ from dash import dcc, html
 import pandas as pd
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
-from app import app
+
+import app
 from persistence.MongoConnector import MongoConnector
 
 FROM_YEAR = 2020
